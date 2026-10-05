@@ -196,12 +196,14 @@ Analyzing the resampled joint data during the 275-day benchmark window demonstra
 1. **Sensor Disconnection & Power Reset Outliers:**
    - In `zone_temp_interior.csv`, values of `85.0°C` and `0.0°C` must be replaced with `NaN` and interpolated linearly, as they represent the well-known DS18B20 digital sensor hardware power-on error codes.
 2. **Negative Power Drift:**
-   - Slight negative readings in `mels_S` and `lig_S` (-0.01 to -0.44 kW) are zero-point calibration drifts of current transducers under zero current. They must be clamped (`np.clip(val, a_min=0, a_max=None)`).
-3. **Duplicate Timestamps:**
+   - Slight negative readings in `mels_S` and `lig_S` (-0.01 to -0.44 kW) are zero-point calibration drifts of current transducers under zero current. They must be clamped (`np.cli3. **Duplicate Timestamps:**
    - A small number of duplicate timestamps exist in raw high-frequency files (`rtu_*.csv` ~34 to 51 rows; `uft_hw_valve.csv` ~594k rows due to redundant multi-sensor event triggers). 
    - Rule: Group by timestamp and take the mean before resampling.
-4. **Time Gaps:**
-   - Small gaps (<2 hours) can be safely forward-filled or linearly interpolated.
+4. **Electrical Submeter Gap Interpolation Rule:**
+   - **Short electrical gaps $< 4$ consecutive hours** ($< 16$ consecutive missing 15-minute readings, or up to 3 consecutive missing hours in resampled space) **may be linearly interpolated**.
+   - **Long electrical gaps $\ge 4$ consecutive hours** are **strictly never interpolated** and are dropped from modeling tables.
+   - *Physical Rationale:* Commercial office buildings exhibit high baseload and thermal inertia over sub-4-hour horizons. Short dropouts represent transient network gateway packet drops or logger reboots rather than genuine physical changes. Gaps $\ge 4$ hours (e.g. multi-day outages) span entire diurnal cycles; interpolating them would synthesize fictitious power ramps and distort model training.
+5. **Non-Essential Missing Channels:**
    - Large missing blocks in non-essential files (e.g., `Unnamed: 6` in `ele.csv` before 2020) should be dropped rather than imputed.
 
 ---
@@ -229,58 +231,78 @@ While 15-minute modeling is feasible, an **hourly (1H / 60min) modeling resoluti
 - **Environmental & Meteorological:**
   - `outdoor_temp`, `indoor_temp`, `solar_radiation`, `relative_humidity` = $\text{mean}$ over 60 min.
 - **HVAC Operations:**
-  - `rtu_fan_spd_mean`, `rtu_damper_mean`, `rtu_sa_temp_mean` = $\text{mean}$ of RTU 003 & 004 (serving South Wing).
+  - `rtu_fan_spd_mean`, `rtu_damper_mean` = $\text{mean}$ of RTU 003 & 004 (serving South Wing).
+
+### Modeling Tables & Joint Dataset Construction:
+- `occupancy_data.parquet`: 6,547 rows, 37 columns.
+- `energy_data.parquet`: 5,945 rows, 45 columns.
+- `joint_modeling_data.parquet`: 5,945 rows, 61 columns (exact timestamp intersection between occupancy and energy tables). Dropped 602 rows relative to occupancy table strictly reflect submeter power outages $\ge 4\text{ h}$.
 
 ---
 
-## 9. Machine Learning Target Formulation
+## 9. Machine Learning Target Formulation (Explicit $t \to t+1$ Forecasting)
 
-### 9.1 Occupancy Prediction (Classification & Regression)
-- **Primary Target (Classification):**
-  $$\text{is\_occupied} \in \{0, 1\}$$
-  Predict whether the zone is occupied during the upcoming hour.
-  - Evaluation Metrics: F1-score, Precision, Recall, ROC-AUC, Confusion Matrix. (Class balance: ~56% occupied, 44% unoccupied; well-balanced, avoiding pathological imbalance).
-- **Secondary Target (Regression):**
-  $$\text{occ\_total\_mean} \in [0, \infty)$$
-  Predict the expected number of occupants for fine-grained HVAC ventilation demand calculations.
+The pipeline strictly solves a **1-Hour-Ahead Forecasting Horizon ($H = +1\text{ hour}$)**, where features at timestamp $t$ forecast conditions during upcoming hour $t+1$:
+
+### 9.1 Occupancy Prediction (Classification & Regression at $t+1$)
+- **Primary Target (Binary Classification):**
+  $$\text{is\_occupied\_next\_hour} \in \{0, 1\}$$
+  Predict whether the zone will be occupied during upcoming hour $t+1$.
+  - Evaluation Metrics: F1-score, Precision, Recall, ROC-AUC, Confusion Matrix. (Class balance: ~56.1% occupied, 43.9% unoccupied; well-balanced, avoiding pathological imbalance).
+- **Secondary Target (Headcount Regression):**
+  $$\text{occ\_total\_mean\_next\_hour} \in [0, \infty)$$
+  Predict the expected continuous occupant headcount during upcoming hour $t+1$.
   - Evaluation Metrics: MAE, RMSE, $R^2$.
 
-### 9.2 Energy Consumption Prediction (Regression)
+### 9.2 Energy Consumption Prediction (Regression at $t+1$)
 - **Primary Target (Total Energy):**
-  $$\text{south\_wing\_total\_kwh} \in [0, \infty)$$
-  Total South Wing electricity consumption (kWh) over the hour.
+  $$\text{south\_wing\_total\_kwh\_next\_hour} \in [0, \infty)$$
+  Total South Wing electricity consumption (kWh) consumed during upcoming hour $t+1$.
 - **Multi-End-Use Submeter Targets:**
-  - `lig_S_kwh`: Lighting energy consumption (kWh)
-  - `mels_S_kwh`: Plug-load energy consumption (kWh)
-  - `hvac_S_kwh`: HVAC electrical consumption (kWh)
+  - `lig_S_kwh_next_hour`: Lighting energy consumption (kWh) during $t+1$.
+  - `mels_S_kwh_next_hour`: Plug-load energy consumption (kWh) during $t+1$.
+  - `hvac_S_kwh_next_hour`: HVAC electrical consumption (kWh) during $t+1$.
 - **Evaluation Metrics:** MAE, RMSE, $R^2$, MAPE.
 
 ---
 
-## 10. Data Leakage Prevention Protocol
+## 10. Chained Pipeline & Optimization Semantics
+
+### 10.1 Chained Occupancy $\to$ Energy Inference
+The deployment data flow follows a strictly causal sequence:
+$$\text{Observations at } t \longrightarrow M_{\text{occ}} \longrightarrow \hat{y}^{\text{occ}}_{t+1} \longrightarrow M_{\text{energy}} \longrightarrow \hat{y}^{\text{energy}}_{t+1}$$
+- **Training Strategy:** The energy model is trained on ground-truth historical occupancy at $t+1$ (establishing an Oracle upper bound).
+- **Evaluation Strategy:** The chained system is evaluated on holdout test data using out-of-sample predicted occupancy $\hat{y}^{\text{occ}}_{t+1}$ to rigorously benchmark real-world error propagation.
+
+### 10.2 Model-Based Counterfactual Optimization
+- Optimization performs **model-based counterfactual scenario evaluation**.
+- It evaluates candidate equipment configurations (lighting off/standby, HVAC temperature deadband setbacks, fan speed reductions) through the trained surrogate energy model.
+- It does **not** assert unverified physical causality; it selects the lowest predicted-energy valid state satisfying ASHRAE comfort constraints.
+
+---
+
+## 11. Data Leakage Prevention Protocol
 
 To ensure strict academic integrity and defensibility:
 1. **Preserve Temporal Ordering:** Data points must NEVER be shuffled randomly. K-Fold cross-validation with random shuffling is strictly prohibited.
 2. **Chronological Splitting:**
-   - **Training Set (70%):** May 22, 2018 – November 30, 2018 (~6.3 months)
-   - **Validation Set (15%):** December 1, 2018 – January 10, 2019 (~1.3 months)
-   - **Test Set (15%):** January 11, 2019 – February 21, 2019 (~1.4 months)
+   - **Training Set (70%):** May 23, 2018 – November 30, 2018 (~6.3 months, ~4,160 hours)
+   - **Validation Set (15%):** December 1, 2018 – January 10, 2019 (~1.3 months, ~890 hours)
+   - **Test Set (15%):** January 11, 2019 – February 21, 2019 (~1.4 months, ~895 hours)
 3. **Strict Lag/Rolling Feature Causality:**
-   - Lag features ($y_{t-1}, y_{t-24}$) must only use observations strictly before timestamp $t$.
-   - Rolling features must use closed='left' or shift(1) to exclude the current and future values:
+   - Lag features ($y_{t-1}, y_{t-2}, y_{t-24}$) must only use observations strictly before or at timestamp $t$.
+   - Rolling features must shift by 1 step (`shift(1)`) to exclude concurrent and future values:
      $$\text{rolling\_mean}_{t} = \frac{1}{k} \sum_{i=1}^{k} x_{t-i}$$
-4. **Leakage-Free Preprocessing:**
+4. **Contiguous Target Shifting:**
+   - Target shift (`shift(-1)`) validates time index contiguity ($\Delta t = 1\text{ h}$); any target spanning a telemetry gap is set to `NaN` and dropped.
+5. **Leakage-Free Preprocessing:**
    - Scalers (StandardScaler, MinMaxScaler) and any categorical encoders must be fitted **strictly on the training period** and only applied (transform) to validation and test periods.
-5. **No Target Leaks:**
-   - Current submeter readings (`lig_S`, `mels_S`) cannot be used to predict concurrent total energy if total energy is their sum.
+6. **No Concurrent Component Leaks:**
+   - Submeter readings at hour $t+1$ cannot be used as features to predict total energy at hour $t+1$. Lags only.
 
 ---
 
-## 11. Proposed Next Phase
+## 12. Proposed Next Phase
 
-With Step 0 complete, the dataset schema, physical correlations, and boundaries are rigorously proven. 
-
-**Recommended Phase 1 & 2 Execution:**
-1. Create a lightweight, reproducible data inspection notebook (`notebooks/00_dataset_inspection.ipynb`) storing key verification figures.
-2. Implement `src/preprocessing.py` to build the automated, leakage-free pipeline that cleans raw telemetry, aligns the South Wing data, and outputs the processed modeling tables to `data/processed/`.
-3. Proceed to **Phase 2: Exploratory Data Analysis (EDA)**.
+With Phase 1 modeling table construction and methodology lock-in complete, all schemas, 1-hour-ahead targets, joint tables, and leakage boundaries are frozen.
+Proceed to **Phase 2: Exploratory Data Analysis (EDA)**.2: Exploratory Data Analysis (EDA)**.

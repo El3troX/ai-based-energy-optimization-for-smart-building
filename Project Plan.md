@@ -134,7 +134,7 @@ A documented EDA notebook with conclusions.
 
 ------------------------------------------------------------------------
 
-# Phase 3 --- Data Preprocessing
+# Phase 3 --- Data Preprocessing & Modeling Tables
 
 Create reusable functions in:
 
@@ -142,25 +142,30 @@ Create reusable functions in:
 
 ### Tasks
 
--   Handle missing values.
--   Remove or justify duplicates.
--   Handle invalid readings.
--   Detect extreme outliers.
--   Parse timestamps.
--   Sort chronologically.
--   Encode categorical variables.
--   Scale features where required.
--   Create reproducible preprocessing pipelines.
+-   Load raw Building 59 files across the verified South Wing 275-day overlap window (`2018-05-22` to `2019-02-21`).
+-   Resample multi-rate sensors to uniform hourly resolution (`freq='1h'`).
+-   Apply physical sensor cleaning:
+    - DS18B20 power-on reset (`85.0°C`) and ground disconnect (`0.0°C`) cleaned and interpolated.
+    - Negative CT power drift clamped to `0.0 kW`.
+-   **Electrical Submeter Gap Interpolation Rule:**
+    - Short electrical gaps $< 4$ consecutive hours ($< 16$ 15-min intervals) are linearly interpolated.
+    - Long electrical gaps $\ge 4$ consecutive hours are strictly dropped.
+    - *Rationale:* Commercial baseloads exhibit high autocorrelation over sub-4h intervals; gaps $\ge 4$ hours cross diurnal cycles and would corrupt ML training if synthesized.
+-   **Explicit Contiguous Target Shift ($t \to t+1$):**
+    - Target variables are shifted 1 hour forward (`shift(-1)`), enforcing strict contiguity ($\Delta t = 1\text{ h}$). Any target spanning a telemetry outage is set to `NaN` and dropped.
+-   Generate finalized modeling tables in `data/processed/`:
+    - `occupancy_data.parquet` (6,547 rows, 37 cols, 0 nulls)
+    - `energy_data.parquet` (5,945 rows, 45 cols, 0 nulls)
+    - `joint_modeling_data.parquet` (5,945 rows, 61 cols, 0 nulls)
 
 ### Important
 
 Do not fit transformations on the entire dataset before splitting.
-
 Preprocessing must avoid data leakage.
 
 ### Deliverable
 
-Clean preprocessing pipeline.
+Clean preprocessing pipeline and validated modeling tables in `data/processed/`.
 
 ------------------------------------------------------------------------
 
@@ -170,50 +175,36 @@ Create:
 
 `src/features.py`
 
-### Temporal features
+### Temporal features (Strictly Deterministic)
 
--   Hour
--   Minute where useful
--   Day of week
--   Month
--   Weekend
--   Working hours
+-   Hour, Day of week, Month, Weekend indicator, Business hours indicator
+-   Trigonometric cyclical coordinates: `hour_sin`, `hour_cos`, `day_of_week_sin`, etc.
 
-### Lag features
+### Environmental & Physical Features
 
-Where supported:
+-   Indoor mean, min, max temperatures, 1-hour thermal difference (`indoor_temp_diff_1h`)
+-   Thermodynamic envelope gradient: `temp_gradient_in_out = indoor_temp_mean - outdoor_temp_c`
+-   Weather: outdoor dry-bulb temperature, relative humidity, dew point, solar radiation
+-   HVAC control feedbacks: South RTU fan speed (`%`), outdoor air damper position (`%`)
 
--   Previous energy consumption
--   Previous occupancy
--   Previous temperature
+### Causal Lag Features ($k \ge 1$, No Lookahead)
 
-### Rolling features
+-   Permitted orders: $k \in \{1\text{h}, 2\text{h}, 24\text{h}\}$ relative to observation time $t$.
+-   Occupancy lags: `is_occupied_lag_1h/2h/24h`, `occ_total_mean_lag_1h/2h/24h`
+-   Energy lags: `south_wing_total_kwh_lag_1h/2h/24h`, submeter lags
 
-Where appropriate:
+### Causal Rolling Features (Strictly Shifted)
 
--   Rolling mean energy
--   Rolling mean temperature
--   Rolling occupancy
-
-### Interaction features
-
-Potential examples:
-
-``` text
-occupancy × temperature
-occupancy × HVAC
-hour × occupancy
-```
-
-Only keep features that are justified and do not introduce leakage.
+-   Rolling statistics computed on shifted series (`shift(1).rolling(W)`):
+    - `rolling_mean_3h`, `rolling_std_3h`, `rolling_mean_6h`, `rolling_std_6h`, `rolling_mean_24h`, `rolling_std_24h`
 
 ### Deliverable
 
-Reusable feature-engineering pipeline.
+Reusable feature-engineering pipeline with verified zero lookahead leakage.
 
 ------------------------------------------------------------------------
 
-# Phase 5 --- Occupancy Prediction
+# Phase 5 --- Occupancy Prediction (Forecasting Horizon: $t \to t+1$)
 
 Create:
 
@@ -223,48 +214,54 @@ and reusable code in:
 
 `src/occupancy_model.py`
 
+### Targets
+
+1. **Primary Binary Classification:**
+   ``` text
+   is_occupied_next_hour in {0, 1}
+   ```
+   (Class balance: 56.1% occupied, 43.9% unoccupied)
+2. **Secondary Headcount Regression:**
+   ``` text
+   occ_total_mean_next_hour >= 0.0
+   ```
+
 ### Models
 
 Start with:
 
-1.  Logistic Regression
-2.  Decision Tree
-3.  Random Forest
+1.  Logistic Regression (interpretable baseline)
+2.  Decision Tree Classifier
+3.  Random Forest Classifier
 
 Optionally:
 
-4.  Gradient Boosting
-5.  XGBoost
+4.  Gradient Boosting Classifier
+5.  XGBoost Classifier
 
 ### Evaluation
 
 Calculate:
 
--   Accuracy
--   Precision
--   Recall
--   F1-score
--   ROC-AUC
+-   Precision, Recall, F1-score
+-   ROC-AUC, PR-AUC
 -   Confusion matrix
+-   Strict chronological split (Train: May–Nov 2018, Val: Dec 2018–Jan 10 2019, Test: Jan 11–Feb 21 2019)
 
 ### Model selection
 
-Select the final model based on the actual validation results.
-
-Do not automatically select Random Forest or XGBoost just because they
-are more advanced.
+Select the final model based on validation F1-score and generalization stability.
 
 ### Deliverables
 
 -   Trained model
--   Evaluation results
--   Comparison table
+-   Evaluation results & comparison table
 -   Confusion matrix
--   Feature importance where applicable
+-   Feature importance analysis
 
 ------------------------------------------------------------------------
 
-# Phase 6 --- Energy Consumption Prediction
+# Phase 6 --- Energy Consumption Prediction (Forecasting Horizon: $t \to t+1$)
 
 Create:
 
@@ -274,38 +271,46 @@ and:
 
 `src/energy_model.py`
 
+### Targets
+
+1. **Primary Whole-Zone Energy:**
+   ``` text
+   south_wing_total_kwh_next_hour >= 0.0 (kWh)
+   ```
+2. **Multi-End-Use Submeters:**
+   - `lig_S_kwh_next_hour` (Lighting kWh)
+   - `mels_S_kwh_next_hour` (Plug-load kWh)
+   - `hvac_S_kwh_next_hour` (HVAC kWh)
+
 ### Models
 
 Start with:
 
-1.  Linear Regression
+1.  Linear / Ridge Regression (interpretable baseline)
 2.  Decision Tree Regressor
 3.  Random Forest Regressor
 
 Optionally:
 
-4.  Gradient Boosting
-5.  XGBoost
+4.  Gradient Boosting Regressor
+5.  XGBoost Regressor
 
-### Evaluation
+### Evaluation & Chained Pipeline Strategy
 
 Calculate:
 
--   MAE
--   RMSE
--   R²
--   MAPE when appropriate
+-   MAE, RMSE, R², MAPE (where numerically safe)
 
-### Important
-
-If the data is chronological, use a time-aware train/validation/test
-split rather than randomly shuffling future observations into the
-training set.
+**Dual Evaluation Strategy:**
+1. **Oracle Energy Model (Upper Bound):**
+   Evaluated with historical ground-truth occupancy at $t+1$ to measure pure energy regression performance.
+2. **Chained Inference Pipeline (Real Deployment):**
+   Evaluated on the holdout test set using out-of-sample predicted occupancy $\hat{y}^{\text{occ}}_{t+1}$ from $M_{\text{occ}}$ to quantify realistic cascading errors.
 
 ### Deliverables
 
 -   Model comparison table
--   Actual vs predicted plot
+-   Actual vs predicted plots
 -   Residual analysis
 -   Feature importance
 -   Saved final model
@@ -326,14 +331,6 @@ Answer:
 
 > What factors cause the model to predict higher energy consumption?
 
-Potential findings might involve:
-
--   Occupancy
--   HVAC
--   Temperature
--   Hour
--   Lighting
-
 Only report findings supported by the trained model and data.
 
 ------------------------------------------------------------------------
@@ -346,57 +343,40 @@ Create:
 
 ## Goal
 
-Use predictions to determine lower-energy operating conditions.
+Perform **Model-Based Counterfactual Scenario Evaluation** to determine lower-energy operating conditions.
+Do not claim unverified physical causality; identify valid configurations that minimize model-predicted energy under operational constraints.
 
-### Input
+### Inputs for upcoming hour $t+1$
 
 ``` text
-occupancy
-temperature
-humidity
-time
-HVAC state
-lighting state
-device states
+Predicted occupancy state (is_occupied_next_hour)
+Current thermal state & gradient (indoor_temp_mean, temp_gradient)
+Outdoor weather conditions (outdoor_temp_c, solar_radiation)
+Baseline equipment settings (lighting, RTU fan speed, damper pct)
 ```
 
-### Candidate actions
+### Candidate Actions & Constraints
 
 ``` text
-HVAC:
-    ON
-    OFF
-    ENERGY_SAVING
-
 Lighting:
-    ON
-    OFF
-    DIMMED
+    If unoccupied: Standby / OFF (drop toward standby baseline 0.29 kW)
+    If occupied: ON / Normal (visual comfort constraint)
+
+HVAC:
+    If unoccupied: Setback mode (relax deadband to 65°F–78°F, reduce fan VFD speed)
+    If occupied: ASHRAE Standard 55 comfort deadbands (70°F–75°F)
 ```
 
-### Basic optimization approach
+### Optimization Approach
 
 For each valid candidate configuration:
 
-1.  Generate the feature vector.
-2.  Predict energy consumption.
-3.  Apply comfort/operational constraints.
-4.  Calculate estimated cost.
-5.  Select the lowest-energy valid configuration.
-
-Conceptually:
-
-``` text
-For each possible configuration:
-    predicted_energy = energy_model(configuration)
-
-    if configuration satisfies constraints:
-        keep configuration
-
-Select configuration with minimum predicted_energy
-```
-
-This creates an interpretable optimization layer around the ML model.
+1.  Generate feature vector for hour $t+1$.
+2.  Pass candidate through trained energy model: $\hat{E}^{\text{cand}} = M_{\text{energy}}(X_t, \hat{y}^{\text{occ}}_{t+1}, U^{\text{cand}})$.
+3.  Apply operational and comfort constraints (eliminate invalid states).
+4.  Select valid configuration with minimum predicted energy:
+    $$\hat{E}^{\text{opt}}_{t+1} = \min_{U^{\text{cand}} \in \mathcal{U}_{\text{valid}}} M_{\text{energy}}(X_t, \hat{y}^{\text{occ}}_{t+1}, U^{\text{cand}})$$
+5.  Calculate estimated energy savings ($\Delta E$), cost savings ($), and CO2 reductions.
 
 ------------------------------------------------------------------------
 

@@ -39,6 +39,12 @@ The pipeline is implemented in modular production scripts:
 4. **Physical Energy Conversion:**  
    In an hourly framework ($\Delta t = 1\text{ h}$), average active power in kilowatts ($\overline{P}_{\text{kW}}$) directly equals active energy consumption in **kilowatt-hours (kWh)**:
    $$\text{Energy (kWh)} = \overline{P}_{\text{kW}} \times 1\text{ h}$$
+5. **Electrical Submeter Gap Interpolation Rule:**  
+   - **Short electrical gaps $< 4$ consecutive hours** ($< 16$ consecutive missing 15-minute readings, or up to 3 consecutive missing hours in resampled space) **may be linearly interpolated**.  
+   - **Long electrical gaps $\ge 4$ consecutive hours** are **strictly never interpolated** and are dropped from modeling tables.  
+   - *Rationale:* Commercial buildings exhibit thermal and baseload inertia over sub-4-hour horizons; short gaps represent sensor gateway packet drops rather than equipment shutdowns. Interpolating $>4\text{ hours}$ would synthesize artificial profiles across diurnal cycles, corrupting model training.
+6. **Explicit Contiguous Target Shift ($t \to t+1$):**  
+   Targets are strictly shifted by 1 hour forward (`shift(-1)`), mapping feature state at hour $t$ to future building state at hour $t+1$. The shift validates time index contiguity ($\Delta t = 1\text{ h}$), ensuring targets across telemetry outages are set to `NaN` and dropped.
 
 ---
 
@@ -47,19 +53,19 @@ The pipeline is implemented in modular production scripts:
 ### 4.1 Occupancy Modeling Table (`occupancy_data.parquet`)
 
 - **File Path:** [data/processed/occupancy_data.parquet](file:///c:/Users/thund/OneDrive/Desktop/ML%20PROJECT/data/processed/occupancy_data.parquet) (also available as `.csv`)
-- **Row Count:** **6,544 rows**
+- **Row Count:** **6,547 rows**
 - **Column Count:** **37 columns** (1 timestamp + 2 targets + 34 features)
-- **Time Range:** `2018-05-23 07:00:00` to `2019-02-21 10:00:00`
+- **Time Range:** `2018-05-23 07:00:00` to `2019-02-21 09:00:00`
 - **Missingness After Preprocessing:** **0 missing values (0.0%)**
-- **Rows Removed:** 60 rows (0.91% of window, due to initial 24-hour lag requirement)
+- **Rows Removed:** 57 rows (0.86% of initial 6,604-hour overlap, due to initial 24-hour lag requirement and final boundary forecasting shift)
 - **Chronological Monotonicity:** Verified `True`
 - **Timestamp Uniqueness:** Verified `True`
 
 #### Schema Breakdown:
 - **Index/Key:** `timestamp`
-- **Targets:**
-  1. `is_occupied` (int, {0, 1}): Binary presence ($1$ if peak hourly headcount $> 0$, else $0$). Class balance: 56.1% occupied, 43.9% unoccupied.
-  2. `occ_total_mean` (float, $\ge 0$): Hourly mean occupant headcount.
+- **Targets (Forecasting $t+1$):**
+  1. `is_occupied_next_hour` (int, {0, 1}): Binary presence at $t+1$ ($1$ if peak hourly headcount $> 0$, else $0$). Class balance: 56.1% occupied, 43.9% unoccupied.
+  2. `occ_total_mean_next_hour` (float, $\ge 0$): Hourly mean occupant headcount at $t+1$.
 - **Features (34):**
   - *Indoor Environment:* `indoor_temp_mean`, `indoor_temp_min`, `indoor_temp_max`, `indoor_temp_diff_1h`, `temp_gradient_in_out`
   - *Outdoor Meteorology:* `outdoor_temp_c`, `relative_humidity`, `dew_point_temp_c`, `solar_radiation`
@@ -74,22 +80,22 @@ The pipeline is implemented in modular production scripts:
 ### 4.2 Energy Modeling Table (`energy_data.parquet`)
 
 - **File Path:** [data/processed/energy_data.parquet](file:///c:/Users/thund/OneDrive/Desktop/ML%20PROJECT/data/processed/energy_data.parquet) (also available as `.csv`)
-- **Row Count:** **5,951 rows**
+- **Row Count:** **5,945 rows**
 - **Column Count:** **45 columns** (1 timestamp + 4 targets + 40 features)
-- **Time Range:** `2018-05-23 07:00:00` to `2019-02-21 10:00:00`
+- **Time Range:** `2018-05-23 07:00:00` to `2019-02-21 09:00:00`
 - **Missingness After Preprocessing:** **0 missing values (0.0%)**
-- **Rows Removed:** 653 rows (9.89% of window, due to initial 24h lag and unrecorded submeter communications)
-- **Retention Rate:** **90.11%**
+- **Rows Removed:** 659 rows (9.98% of initial 6,604-hour overlap, due to initial 24h lag, submeter communication outages $\ge 4\text{ h}$, and boundary shifts)
+- **Retention Rate:** **90.02%**
 - **Chronological Monotonicity:** Verified `True`
 - **Timestamp Uniqueness:** Verified `True`
 
 #### Schema Breakdown:
 - **Index/Key:** `timestamp`
-- **Targets:**
-  1. `south_wing_total_kwh` (float): Total South Wing electricity consumption (kWh).
-  2. `lig_S_kwh` (float): Overhead lighting electricity consumption (kWh).
-  3. `mels_S_kwh` (float): Plug-load electricity consumption (kWh).
-  4. `hvac_S_kwh` (float): HVAC equipment electricity consumption (kWh).
+- **Targets (Forecasting $t+1$):**
+  1. `south_wing_total_kwh_next_hour` (float): Total South Wing electricity consumption (kWh) during hour $t+1$.
+  2. `lig_S_kwh_next_hour` (float): Overhead lighting electricity consumption (kWh) during hour $t+1$.
+  3. `mels_S_kwh_next_hour` (float): Plug-load electricity consumption (kWh) during hour $t+1$.
+  4. `hvac_S_kwh_next_hour` (float): HVAC equipment electricity consumption (kWh) during hour $t+1$.
 - **Features (40):**
   - *Occupancy State (Predictors):* `is_occupied`, `occ_total_mean`
   - *Indoor Environment:* `indoor_temp_mean`, `indoor_temp_diff_1h`, `temp_gradient_in_out`
@@ -102,11 +108,23 @@ The pipeline is implemented in modular production scripts:
 
 ---
 
+### 4.3 Joint Modeling Table (`joint_modeling_data.parquet`)
+
+- **File Path:** [data/processed/joint_modeling_data.parquet](file:///c:/Users/thund/OneDrive/Desktop/ML%20PROJECT/data/processed/joint_modeling_data.parquet) (also available as `.csv`)
+- **Row Count:** **5,945 rows**
+- **Column Count:** **61 columns** (All features and targets from both domains synchronized on identical timestamps)
+- **Time Range:** `2018-05-23 07:00:00` to `2019-02-21 09:00:00`
+- **Missingness After Preprocessing:** **0 missing values (0.0%)**
+- **Intersection Audit:** Exact inner join between occupancy and energy tables. Occupancy rows = 6,547, Energy rows = 5,945, Common rows = 5,945. The 602 dropped occupancy rows correspond strictly to electrical submeter outages $\ge 4\text{ h}$.
+
+---
+
 ## 5. Strict Data Leakage Audit
 
 | Leakage Risk Category | Implementation Defense | Status |
 |---|---|---|
 | **Future Observation Leakage** | All lag features enforce $\text{lag} \ge 1$. Rolling features shift the time series by $1$ step (`shift(1)`) before computing rolling statistics. | **VERIFIED (Zero Lookahead)** |
+| **Forecasting Horizon Integrity** | Targets represent hour $t+1$ (`_next_hour`). Contiguity check ensures no cross-gap target leakage. | **VERIFIED (Strict $t \to t+1$ Forecasting)** |
 | **Concurrent Target Leakage in Occupancy** | The occupancy table strictly excludes all concurrent energy submeter measurements. | **VERIFIED (No Energy Features in Occupancy Table)** |
 | **Component-Sum Additive Leakage** | Concurrent submeter readings (`lig_S_kwh`, `mels_S_kwh`, `hvac_S_kwh`) are strictly banned from predicting `south_wing_total_kwh`. Only historical lags are used. | **VERIFIED (No Additive Leakage)** |
 | **Lookahead Transformation Bias** | All feature scalers/encoders will be fitted strictly on the training partition ($t \le \text{2018-11-30}$). | **READY FOR PHASE 3/4** |
@@ -116,6 +134,7 @@ The pipeline is implemented in modular production scripts:
 ## 6. Assumptions & Limitations
 
 1. **Spatial Aggregation:** South Wing office space covers Floors 3 & 4. Occupancy headcounts are combined to match the spatial circuit boundary of the South Wing electrical submeters.
-2. **Short Telemetry Gaps:** Small electrical telemetry gaps ($< 4$ consecutive hours) were linearly interpolated. Large continuous blocks were dropped.
+2. **Short Telemetry Gaps:** Small electrical telemetry gaps ($< 4$ consecutive hours) were linearly interpolated. Gaps $\ge 4$ hours were dropped.
 3. **CO2 Exclusion:** As proven in Step 0, `zone_co2.csv` telemetry begins in August 2019, 6 months after camera occupancy concluded. CO2 cannot be used in camera occupancy modeling.
 4. **Airflow Sensor Dropouts:** Supply airflow sensors (`rtu_sa_fr.csv`) suffered substantial physical hardware outages in 2018. The robust, 100% complete actuator signals (`rtu_south_fan_spd_mean` and `rtu_south_damper_pct_mean`) are used as the primary HVAC operational controls, preserving over 90% of observations.
+5. **Optimization Semantics:** Optimization performs *model-based counterfactual scenario evaluation* (no claims of unverified causal savings). Candidate configurations are evaluated against comfort/operational constraints to select the lowest predicted-energy valid state.

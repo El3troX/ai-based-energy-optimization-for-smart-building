@@ -42,23 +42,25 @@ The dataset is well aligned with the project because it contains a combination o
 The dataset provides substantially more depth than a simple energy-forecasting dataset and supports the project's intended pipeline:
 
 ```text
-Occupancy + Environment + HVAC + Historical Energy + Weather
-                         |
-                         v
-                  Machine Learning
-                         |
-              +----------+----------+
-              |                     |
-              v                     v
-      Occupancy Prediction   Energy Prediction
-              |                     |
-              +----------+----------+
-                         |
-                         v
-                 Optimization
-                         |
-                         v
-              Building Energy Savings
+Current Observations at time t (Environment, Weather, HVAC, Lags)
+                         │
+                         ▼
+             Occupancy Forecast Model (M_occ)
+                         │
+                         ▼
+        Predicted Occupancy at t+1 (is_occupied_next_hour)
+                         │
+                         ▼
+              Energy Forecast Model (M_energy)
+                         │
+                         ▼
+      Predicted Energy at t+1 (south_wing_total_kwh_next_hour)
+                         │
+                         ▼
+       Optimization Engine (Counterfactual Scenario Search)
+                         │
+                         ▼
+         Energy & Cost-Optimized Setpoint Recommendations
 ```
 
 ### Dataset Handling Rule
@@ -134,183 +136,157 @@ machine learning models to make data-driven decisions.
 -   Allow users to modify building conditions interactively.
 -   Provide actionable optimization recommendations.
 
-------------------------------------------------------------------------
+-------------------------------------------------## 3. Intended System Architecture
 
-## 3. Intended System Architecture
+The system implements a sequential, chained predictive architecture that mirrors real-time BEMS supervisory control:
 
 ``` text
-Smart Building Dataset / Sensor Data
-                |
-                v
-       Data Preprocessing
-                |
-                v
-       Feature Engineering
-                |
-       +--------+---------+
-       |                  |
-       v                  v
-Occupancy Model     Energy Model
-Classification       Regression
-       |                  |
-       +--------+---------+
-                |
-                v
-        Optimization Engine
-                |
-       +--------+---------+
-       |        |         |
-       v        v         v
-      HVAC   Lighting   Devices
-                |
-                v
-       Before/After Simulation
-                |
-                v
-       Streamlit Dashboard
+Smart Building Sensed Data at time t (Indoor Temp, Weather, HVAC Controls, Lags)
+                                  │
+                                  ▼
+                         Data Preprocessing
+                                  │
+                                  ▼
+                        Feature Engineering
+                                  │
+                                  ▼
+                       Occupancy Model (M_occ)
+                     Classification / Regression
+                                  │
+                                  ▼
+                Predicted Future Occupancy at t+1
+          (is_occupied_next_hour, occ_total_mean_next_hour)
+                                  │
+                                  ▼
+                         Energy Model (M_energy)
+                        Multi-End-Use Regression
+                                  │
+                                  ▼
+                  Predicted Future Energy at t+1
+                 (south_wing_total_kwh_next_hour)
+                                  │
+                                  ▼
+             Optimization Engine (Counterfactual Search)
+       (Evaluates candidate HVAC/lighting settings via M_energy)
+                                  │
+                                  ▼
+                       Before/After Simulation
+                                  │
+                                  ▼
+                         Streamlit Dashboard
 ```
 
 ------------------------------------------------------------------------
 
 ## 4. Machine Learning Components
 
-### 4.1 Occupancy Prediction
+### 4.1 Occupancy Prediction (Forecasting Horizon: $t \to t+1$)
 
-Treat occupancy prediction as a classification problem.
+Treat occupancy prediction as a 1-hour-ahead forecasting problem ($H = +1\text{ hour}$): using observations available at timestamp $t$, forecast occupancy during the upcoming hour $t+1$.
 
-Potential input features:
+Input features available at time $t$:
+- Indoor temperatures & rate of change (`indoor_temp_mean`, `indoor_temp_diff_1h`, `temp_gradient_in_out`)
+- Outdoor meteorology (`outdoor_temp_c`, `relative_humidity`, `dew_point_temp_c`, `solar_radiation`)
+- HVAC operational status (`rtu_south_fan_spd_mean`, `rtu_south_damper_pct_mean`)
+- Calendar & schedule (`hour`, `day_of_week`, `is_weekend`, `is_business_hour`, `month`)
+- Cyclical trigonometric encodings (`hour_sin`, `hour_cos`, `day_of_week_sin`, etc.)
+- Causal historical occupancy lags (`is_occupied_lag_1h/2h/24h`, `occ_total_mean_lag_1h/2h/24h`)
+- Causal rolling window statistics (`occ_total_mean_rolling_mean_3h/6h/24h`, rolling std)
 
--   Temperature
--   Humidity
--   CO2
--   Light intensity
--   Hour
--   Day of week
--   Weekend indicator
--   Previous occupancy
--   Previous environmental readings
--   HVAC state
--   Lighting state
+*Note on CO2:* In Building 59, `zone_co2.csv` telemetry begins in August 2019, 6 months after camera occupancy tracking concluded (February 2019). Therefore, CO2 is physically non-concurrent with camera occupancy and is excluded from occupancy models to prevent an empty dataset.
 
-Target:
-
-``` text
-occupied = 0 or 1
-```
+Explicit Targets:
+1. **Primary Binary Classification:**
+   ``` text
+   is_occupied_next_hour = 0 or 1
+   ```
+   (Class balance: 56.1% occupied, 43.9% unoccupied).
+2. **Secondary Headcount Regression:**
+   ``` text
+   occ_total_mean_next_hour >= 0.0
+   ```
 
 Candidate algorithms:
+- Logistic Regression (interpretable baseline)
+- Decision Tree Classifier
+- Random Forest Classifier
+- Gradient Boosting Classifier
+- XGBoost Classifier
 
--   Logistic Regression
--   Decision Tree
--   Random Forest
--   Gradient Boosting
--   XGBoost, if appropriate
-
-Metrics:
-
--   Accuracy
--   Precision
--   Recall
--   F1-score
--   ROC-AUC
--   Confusion Matrix
-
-Do not rely on accuracy alone if the dataset is imbalanced.
+Evaluation Metrics:
+- Precision, Recall, F1-score, ROC-AUC, PR-AUC, Confusion Matrix, Accuracy.
 
 ------------------------------------------------------------------------
 
-### 4.2 Energy Consumption Prediction
+### 4.2 Energy Consumption Prediction (Forecasting Horizon: $t \to t+1$)
 
-Treat energy consumption prediction as a regression problem.
+Treat energy consumption prediction as a 1-hour-ahead regression problem: using observations up to hour $t$, forecast South Wing electricity consumption during the upcoming hour $t+1$.
 
-Potential input features:
+Input features:
+- **Future Occupancy:** Occupancy state for hour $t+1$ (see evaluation strategy below).
+- Indoor environmental state at $t$ (`indoor_temp_mean`, `indoor_temp_diff_1h`, `temp_gradient_in_out`)
+- Outdoor meteorology at $t$ (`outdoor_temp_c`, `relative_humidity`, `dew_point_temp_c`, `solar_radiation`)
+- Controllable HVAC operational settings (`rtu_south_fan_spd_mean`, `rtu_south_damper_pct_mean`)
+- Calendar & cyclical indicators (`hour`, `day_of_week`, `is_weekend`, cyclical coordinates)
+- Causal historical energy lags (`south_wing_total_kwh_lag_1h/2h/24h`, submeter lags)
+- Causal rolling energy statistics (`south_wing_total_kwh_rolling_mean_3h/6h/24h`, rolling std)
 
--   Occupancy
--   Temperature
--   Humidity
--   CO2
--   HVAC usage
--   Lighting usage
--   Hour
--   Day of week
--   Weekend/weekday
--   Previous energy consumption
--   Rolling energy statistics
--   Outdoor/environmental conditions when available
-
-Target:
-
+Explicit Targets:
 ``` text
-energy_consumption
+south_wing_total_kwh_next_hour   (Primary Whole-Zone Energy in kWh)
+lig_S_kwh_next_hour              (Submeter: Lighting Energy in kWh)
+mels_S_kwh_next_hour             (Submeter: Plug-Loads in kWh)
+hvac_S_kwh_next_hour             (Submeter: HVAC Equipment in kWh)
 ```
 
 Candidate algorithms:
+- Linear / Ridge Regression (interpretable baseline)
+- Decision Tree Regressor
+- Random Forest Regressor
+- Gradient Boosting Regressor
+- XGBoost Regressor
 
--   Linear Regression
--   Ridge Regression
--   Decision Tree Regressor
--   Random Forest Regressor
--   Gradient Boosting Regressor
--   XGBoost Regressor, if appropriate
+Evaluation Metrics:
+- MAE, RMSE, R², MAPE (where numerically safe).
 
-Metrics:
-
--   MAE
--   MSE
--   RMSE
--   R²
--   MAPE when appropriate and numerically safe
+### Academic Evaluation Strategy (Chained Pipeline):
+To ensure scientific rigor and reflect real deployment conditions:
+1. **Oracle Energy Model (Upper Bound):**
+   Trained and evaluated with historical ground-truth occupancy at $t+1$. This establishes the maximum regression performance assuming perfect occupancy foresight.
+2. **Chained Inference Pipeline (Real Deployment):**
+   Evaluated on the holdout test set using out-of-sample predicted occupancy $\hat{y}^{\text{occ}}_{t+1}$ generated by $M_{\text{occ}}$. This benchmarks error propagation from occupancy predictions into energy forecasts.
 
 ------------------------------------------------------------------------
 
 ## 5. Optimization Layer
 
-The optimization layer should be clearly separated from the ML models.
+The optimization layer performs **Model-Based Counterfactual Scenario Evaluation**.
 
-ML predicts what is likely to happen.
+### Academic & Physical Disclaimer:
+- The optimizer evaluates counterfactual operating scenarios using the trained surrogate energy model $M_{\text{energy}}$.
+- It does **not** assert unverified physical causality; rather, it identifies control configurations that minimize *model-predicted energy* while strictly honoring operational and comfort constraints.
 
-The optimization layer decides what should be changed.
-
-Example:
-
-``` text
-Current state:
-Occupancy = 0
-Temperature = 29°C
-HVAC = ON
-Lights = ON
-
-Optimization:
-HVAC -> Energy-saving mode
-Lights -> OFF
-
-Predicted current consumption = 4.8 kWh
-Predicted optimized consumption = 3.2 kWh
-
-Estimated saving = 1.6 kWh
-```
-
-The optimizer can initially be rule-based or simulation-based. A more
-advanced implementation can use constrained optimization.
-
-Possible optimization objectives:
-
-``` text
-Minimize:
-    Energy Consumption
-```
-
-subject to constraints such as:
-
-``` text
-Occupancy comfort
-Temperature bounds
-Maximum HVAC changes
-Required lighting level
-Device availability
-```
-
-Do not claim that the optimization algorithm itself is machine learning
+### Optimization Workflow:
+For each upcoming hour $t+1$:
+1. **Receive Context:** Current thermal/weather state at $t$, predicted occupancy $\hat{y}^{\text{occ}}_{t+1}$, and baseline control settings $U^{\text{base}}_{t+1}$.
+2. **Generate Candidate Configurations ($U^{\text{cand}}$):**
+   - **Lighting:**
+     - Unoccupied ($\hat{y}^{\text{occ}}_{t+1} = 0$): Recommend `Lights = OFF / Standby` (reducing power toward standby baseline of 0.29 kW).
+     - Occupied ($\hat{y}^{\text{occ}}_{t+1} = 1$): Enforce visual comfort constraint (`Lights = ON / Normal`).
+   - **HVAC:**
+     - Unoccupied: Apply temperature setback (relax deadband from $70^\circ\text{F}\text{--}74^\circ\text{F}$ to $65^\circ\text{F}\text{--}78^\circ\text{F}$), reducing RTU fan VFD speed.
+     - Occupied: Maintain ASHRAE Standard 55 thermal comfort deadbands ($21^\circ\text{C}\text{--}24^\circ\text{C}$ / $70^\circ\text{F}\text{--}75^\circ\text{F}$).
+3. **Pass Candidates Through Trained Energy Model:**
+   Evaluate predicted energy $\hat{E}^{\text{cand}}_{t+1} = M_{\text{energy}}(X_t, \hat{y}^{\text{occ}}_{t+1}, U^{\text{cand}})$.
+4. **Apply Operational & Comfort Constraints:**
+   Eliminate candidates that violate temperature, ventilation, or equipment safety bounds.
+5. **Select Optimal Configuration:**
+   Select the valid configuration with the lowest predicted energy:
+   $$\hat{E}^{\text{opt}}_{t+1} = \min_{U^{\text{cand}} \in \mathcal{U}_{\text{valid}}} M_{\text{energy}}(X_t, \hat{y}^{\text{occ}}_{t+1}, U^{\text{cand}})$$
+   $$\text{Estimated Savings} = \max\left(0, \hat{E}^{\text{base}}_{t+1} - \hat{E}^{\text{opt}}_{t+1}\right)$$
+6. **Quantify Financial & Environmental Impact:**
+   - Cost Savings ($) = $\text{Savings (kWh)} \times \text{TOU Tariff (\$/kWh)}$
+   - CO2 Reductions ($\text{kg CO}_2$) = $\text{Savings (kWh)} \times 0.22\text{ kg CO}_2/\text{kWh}$ (California eGRID regional factor)rning
 unless it actually is.
 
 ------------------------------------------------------------------------

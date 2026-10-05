@@ -4,7 +4,7 @@ Data Preprocessing and Harmonization Pipeline for Smart Building AI.
 Processes the official Building 59 raw sensor streams, enforces sensor cleaning
 rules (DS18B20 error codes, current transducer negative offsets, duplicate timestamps),
 harmonizes multi-frequency channels into hourly physical units (kWh, °C, counts),
-and constructs leakage-free modeling tables for occupancy and energy prediction.
+and constructs leakage-free modeling tables for 1-hour-ahead occupancy and energy forecasting.
 """
 
 import os
@@ -44,7 +44,7 @@ def load_clean_occupancy(
     df["timestamp"] = pd.to_datetime(df["date"])
     df = df.drop(columns=["date"]).sort_values("timestamp")
 
-    # Handle duplicates if any by taking the mean across duplicate timestamps
+    # Handle duplicate timestamps by averaging
     if df["timestamp"].duplicated().any():
         df = df.groupby("timestamp").mean().reset_index()
 
@@ -62,7 +62,7 @@ def load_clean_occupancy(
     resampled["occ_third_south_mean"] = df["occ_third_south"].resample(freq).mean()
     resampled["occ_fourth_south_mean"] = df["occ_fourth_south"].resample(freq).mean()
 
-    # Classification target: zone is occupied if max count during the hour > 0
+    # Classification: zone is occupied if max count during the hour > 0
     resampled["is_occupied"] = (resampled["occ_total_max"] > 0).astype(int)
 
     return resampled
@@ -77,6 +77,7 @@ def load_clean_electricity(
     Clamps negative transducer drift to 0.0.
     In an hourly framework, average active power (kW) multiplied by 1 hour equals
     electrical energy consumption in kilowatt-hours (kWh).
+    Short electrical telemetry gaps (< 4 consecutive hours) are linearly interpolated.
 
     Parameters
     ----------
@@ -103,14 +104,15 @@ def load_clean_electricity(
 
     meter_cols = [c for c in df.columns if c != "timestamp"]
     for col in meter_cols:
-        # Clamp sensor baseline zero-drift (e.g., -0.05 kW) to 0.0
+        # Clamp transducer zero-drift (e.g., -0.05 kW) to 0.0
         df[col] = df[col].clip(lower=0.0)
 
     df = df.set_index("timestamp")
-    # Hourly resample: mean power (kW) * 1 hour = energy in kWh
+    # Hourly resample: mean active power (kW) * 1 hour = energy in kWh
     resampled = df.resample(freq).mean()
 
-    # Linearly interpolate small telemetry dropouts (< 4 consecutive hours)
+    # Linearly interpolate short telemetry dropouts (< 4 consecutive hours)
+    # Gaps >= 4 hours remain un-interpolated to preserve integrity
     resampled = resampled.interpolate(method="linear", limit=4)
 
     # Create explicit physical kWh targets for the South Wing
@@ -120,7 +122,6 @@ def load_clean_electricity(
     out["hvac_S_kwh"] = resampled["hvac_S"]
     out["south_wing_total_kwh"] = out["lig_S_kwh"] + out["mels_S_kwh"] + out["hvac_S_kwh"]
 
-    # North Wing references for context
     if "mels_N" in resampled.columns and "hvac_N" in resampled.columns:
         out["mels_N_kwh"] = resampled["mels_N"]
         out["hvac_N_kwh"] = resampled["hvac_N"]
@@ -197,10 +198,8 @@ def load_clean_indoor_temperature(
     logger_cols = [c for c in df.columns if c != "timestamp"]
     for col in logger_cols:
         # DS18B20 power-on reset code is exactly 85.0°C; disconnection code is 0.0°C
-        # Plausible indoor temperature in research office is 15°C to 35°C
         invalid_mask = (df[col] == 85.0) | (df[col] == 0.0) | (df[col] < 12.0) | (df[col] > 38.0)
         df.loc[invalid_mask, col] = np.nan
-        # Interpolate across short transient gaps
         df[col] = df[col].interpolate(method="linear", limit=12)
 
     df = df.set_index("timestamp")
@@ -259,15 +258,42 @@ def load_clean_rtu_south(
     return out
 
 
+def _apply_contiguous_shift(
+    df: pd.DataFrame,
+    target_cols: list,
+    suffix: str = "_next_hour",
+    freq_hours: int = 1
+) -> pd.DataFrame:
+    """
+    Shift targets forward by 1 step to align Features(t) with Targets(t+1),
+    strictly enforcing that the shifted target must be contiguous (+1 hour).
+    If the next row is across a data outage gap (> 1 hour), the shifted target
+    is set to NaN to prevent spanning across outages.
+    """
+    df = df.copy()
+    time_series = df.index.to_series()
+    # Check if the next timestamp is exactly 1 hour ahead
+    time_diff_to_next = time_series.diff(-1).abs()
+    is_contiguous_next = time_diff_to_next == pd.Timedelta(hours=freq_hours)
+
+    for col in target_cols:
+        target_name = f"{col}{suffix}"
+        df[target_name] = df[col].shift(-1)
+        # Invalidate target if the next row is across an outage gap
+        df.loc[~is_contiguous_next, target_name] = np.nan
+
+    return df
+
+
 def build_modeling_tables(
     raw_dir: str,
     processed_dir: str,
     start_time: str = "2018-05-22 07:00:00",
     end_time: str = "2019-02-21 10:00:00"
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict]:
     """
-    Construct standardized, leakage-free modeling tables for occupancy and energy prediction,
-    constrained to the verified empirical sensor overlap period.
+    Construct standardized, leakage-free modeling tables for 1-hour-ahead
+    occupancy and energy forecasting, constrained to the verified sensor overlap period.
 
     Parameters
     ----------
@@ -282,8 +308,8 @@ def build_modeling_tables(
 
     Returns
     -------
-    Tuple[pd.DataFrame, pd.DataFrame, Dict]
-        (occupancy_df, energy_df, validation_metrics)
+    Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict]
+        (occupancy_df, energy_df, joint_df, validation_metrics)
     """
     clean_dir = os.path.join(raw_dir, "Bldg59_clean data")
     os.makedirs(processed_dir, exist_ok=True)
@@ -309,14 +335,19 @@ def build_modeling_tables(
     combined = add_cyclical_time_features(combined)
     combined = add_thermal_features(combined)
 
-    # 5. Build OCCUPANCY MODELING TABLE
-    # Targets: is_occupied (binary), occ_total_mean (continuous headcount)
-    # Features: Environmental, weather, HVAC status, temporal features, and strictly causal lagged occupancy.
-    # Excludes concurrent electrical consumption to prevent target leakage.
+    # 5. Build OCCUPANCY MODELING TABLE (Forecasting Horizon: t -> t+1)
     occ_df = combined.copy()
     occ_df = add_lag_features(occ_df, columns=["occ_total_mean", "is_occupied"], lags=[1, 2, 24])
     occ_df = add_rolling_features(occ_df, columns=["occ_total_mean"], windows=[3, 6, 24])
 
+    # Explicit 1-hour-ahead targets (contiguous shift)
+    occ_df = _apply_contiguous_shift(
+        occ_df,
+        target_cols=["is_occupied", "occ_total_mean"],
+        suffix="_next_hour"
+    )
+
+    occ_target_cols = ["is_occupied_next_hour", "occ_total_mean_next_hour"]
     occ_feature_cols = [
         # Environmental
         "indoor_temp_mean", "indoor_temp_min", "indoor_temp_max",
@@ -325,27 +356,21 @@ def build_modeling_tables(
         "outdoor_temp_c", "relative_humidity", "dew_point_temp_c", "solar_radiation",
         # HVAC operational status
         "rtu_south_fan_spd_mean", "rtu_south_damper_pct_mean",
-        # Temporal / Calendar
+        # Temporal / Calendar at time t
         "hour", "day_of_week", "is_weekend", "is_business_hour", "month",
         "hour_sin", "hour_cos", "day_of_week_sin", "day_of_week_cos", "month_sin", "month_cos",
-        # Causal Lags & Rolling
+        # Strictly Causal Past Lags & Rolling
         "occ_total_mean_lag_1h", "occ_total_mean_lag_2h", "occ_total_mean_lag_24h",
         "is_occupied_lag_1h", "is_occupied_lag_2h", "is_occupied_lag_24h",
         "occ_total_mean_rolling_mean_3h", "occ_total_mean_rolling_std_3h",
         "occ_total_mean_rolling_mean_6h", "occ_total_mean_rolling_std_6h",
         "occ_total_mean_rolling_mean_24h", "occ_total_mean_rolling_std_24h",
     ]
-    occ_target_cols = ["is_occupied", "occ_total_mean"]
 
-    occupancy_data = occ_df[occ_target_cols + occ_feature_cols].copy()
-    # Drop rows where lag is unavailable
-    occupancy_data = occupancy_data.dropna().copy()
+    occupancy_data = occ_df[occ_target_cols + occ_feature_cols].dropna().copy()
     occupancy_data.reset_index(inplace=True)
 
-    # 6. Build ENERGY MODELING TABLE
-    # Targets: south_wing_total_kwh, lig_S_kwh, mels_S_kwh, hvac_S_kwh
-    # Features: Occupancy state, environmental, weather, HVAC status, temporal features,
-    # strictly causal lagged energy. Excludes concurrent submeter predictors when predicting total.
+    # 6. Build ENERGY MODELING TABLE (Forecasting Horizon: t -> t+1)
     energy_df = combined.copy()
     energy_df = add_lag_features(
         energy_df,
@@ -358,15 +383,31 @@ def build_modeling_tables(
         windows=[3, 6, 24]
     )
 
+    # Explicit 1-hour-ahead energy targets (contiguous shift)
+    energy_targets_to_shift = ["south_wing_total_kwh", "lig_S_kwh", "mels_S_kwh", "hvac_S_kwh"]
+    energy_df = _apply_contiguous_shift(
+        energy_df,
+        target_cols=energy_targets_to_shift,
+        suffix="_next_hour"
+    )
+
+    # Occupancy predictor at t+1: ground truth at training, predicted during inference
+    energy_df = _apply_contiguous_shift(
+        energy_df,
+        target_cols=["is_occupied", "occ_total_mean"],
+        suffix="_next_hour"
+    )
+
+    energy_target_cols = [f"{c}_next_hour" for c in energy_targets_to_shift]
     energy_feature_cols = [
-        # Occupancy Predictors
-        "is_occupied", "occ_total_mean",
-        # Environmental & Meteorological
+        # Future Occupancy Predictor at t+1 (Ground truth during training / Predicted at inference)
+        "is_occupied_next_hour", "occ_total_mean_next_hour",
+        # Environmental & Meteorological at time t
         "indoor_temp_mean", "indoor_temp_diff_1h", "temp_gradient_in_out",
         "outdoor_temp_c", "relative_humidity", "dew_point_temp_c", "solar_radiation",
-        # HVAC Controllable Operations
+        # HVAC Controllable Operations at time t
         "rtu_south_fan_spd_mean", "rtu_south_damper_pct_mean",
-        # Temporal / Calendar
+        # Temporal / Calendar at time t
         "hour", "day_of_week", "is_weekend", "is_business_hour", "month",
         "hour_sin", "hour_cos", "day_of_week_sin", "day_of_week_cos", "month_sin", "month_cos",
         # Strictly Causal Past Energy Lags & Rolling
@@ -378,33 +419,50 @@ def build_modeling_tables(
         "south_wing_total_kwh_rolling_mean_6h", "south_wing_total_kwh_rolling_std_6h",
         "south_wing_total_kwh_rolling_mean_24h", "south_wing_total_kwh_rolling_std_24h",
     ]
-    energy_target_cols = ["south_wing_total_kwh", "lig_S_kwh", "mels_S_kwh", "hvac_S_kwh"]
 
-    energy_data = energy_df[energy_target_cols + energy_feature_cols].copy()
-    energy_data = energy_data.dropna().copy()
+    energy_data = energy_df[energy_target_cols + energy_feature_cols].dropna().copy()
     energy_data.reset_index(inplace=True)
 
-    # 7. Integrity Verifications
-    for name, df_table in [("occupancy_data", occupancy_data), ("energy_data", energy_data)]:
+    # 7. Build JOINT MODELING TABLE (Timestamp Intersection)
+    joint_timestamps = sorted(list(set(occupancy_data["timestamp"]).intersection(set(energy_data["timestamp"]))))
+    
+    # Merge on timestamp
+    joint_data = pd.merge(
+        occupancy_data[["timestamp"] + occ_target_cols + [c for c in occ_feature_cols if c not in energy_feature_cols]],
+        energy_data,
+        on="timestamp",
+        how="inner"
+    )
+
+    # 8. Integrity Verifications
+    for name, df_table in [
+        ("occupancy_data", occupancy_data),
+        ("energy_data", energy_data),
+        ("joint_modeling_data", joint_data)
+    ]:
         assert df_table["timestamp"].is_monotonic_increasing, f"{name} is not chronologically sorted!"
         assert not df_table["timestamp"].duplicated().any(), f"{name} contains duplicate timestamps!"
         assert df_table.isnull().sum().sum() == 0, f"{name} contains unhandled NaN values!"
 
-    # 8. Export to Parquet and CSV
-    occ_parquet_path = os.path.join(processed_dir, "occupancy_data.parquet")
-    occ_csv_path = os.path.join(processed_dir, "occupancy_data.csv")
-    occupancy_data.to_parquet(occ_parquet_path, index=False)
-    occupancy_data.to_csv(occ_csv_path, index=False)
+    # 9. Export to Parquet and CSV
+    occupancy_data.to_parquet(os.path.join(processed_dir, "occupancy_data.parquet"), index=False)
+    occupancy_data.to_csv(os.path.join(processed_dir, "occupancy_data.csv"), index=False)
 
-    energy_parquet_path = os.path.join(processed_dir, "energy_data.parquet")
-    energy_csv_path = os.path.join(processed_dir, "energy_data.csv")
-    energy_data.to_parquet(energy_parquet_path, index=False)
-    energy_data.to_csv(energy_csv_path, index=False)
+    energy_data.to_parquet(os.path.join(processed_dir, "energy_data.parquet"), index=False)
+    energy_data.to_csv(os.path.join(processed_dir, "energy_data.csv"), index=False)
 
-    # 9. Validation Report Summary
+    joint_data.to_parquet(os.path.join(processed_dir, "joint_modeling_data.parquet"), index=False)
+    joint_data.to_csv(os.path.join(processed_dir, "joint_modeling_data.csv"), index=False)
+
+    # 10. Audit dropped rows between tables
+    occ_ts_set = set(occupancy_data["timestamp"])
+    energy_ts_set = set(energy_data["timestamp"])
+    dropped_in_energy = occ_ts_set - energy_ts_set
+
     validation_report = {
         "benchmark_window": f"{start_time} to {end_time}",
         "initial_aligned_rows": initial_rows,
+        "prediction_horizon": "1 hour ahead (Features at t -> Targets at t+1)",
         "occupancy_table": {
             "rows": len(occupancy_data),
             "columns": len(occupancy_data.columns),
@@ -412,9 +470,8 @@ def build_modeling_tables(
             "end_time": str(occupancy_data["timestamp"].max()),
             "targets": occ_target_cols,
             "features_count": len(occ_feature_cols),
-            "features": occ_feature_cols,
             "missingness": int(occupancy_data.isnull().sum().sum()),
-            "rows_removed_due_to_lags": initial_rows - len(occupancy_data),
+            "rows_removed_due_to_lags_and_shifts": initial_rows - len(occupancy_data),
             "percentage_removed": round((initial_rows - len(occupancy_data)) / initial_rows * 100, 2),
             "is_monotonic": bool(occupancy_data["timestamp"].is_monotonic_increasing),
             "is_unique_timestamps": bool(not occupancy_data["timestamp"].duplicated().any())
@@ -426,13 +483,27 @@ def build_modeling_tables(
             "end_time": str(energy_data["timestamp"].max()),
             "targets": energy_target_cols,
             "features_count": len(energy_feature_cols),
-            "features": energy_feature_cols,
             "missingness": int(energy_data.isnull().sum().sum()),
-            "rows_removed_due_to_lags": initial_rows - len(energy_data),
+            "rows_removed_due_to_lags_and_outages": initial_rows - len(energy_data),
             "percentage_removed": round((initial_rows - len(energy_data)) / initial_rows * 100, 2),
             "is_monotonic": bool(energy_data["timestamp"].is_monotonic_increasing),
             "is_unique_timestamps": bool(not energy_data["timestamp"].duplicated().any())
+        },
+        "joint_table": {
+            "rows": len(joint_data),
+            "columns": len(joint_data.columns),
+            "start_time": str(joint_data["timestamp"].min()),
+            "end_time": str(joint_data["timestamp"].max()),
+            "intersection_ratio": round(len(joint_data) / len(occupancy_data) * 100, 2),
+            "dropped_from_occupancy_count": len(dropped_in_energy),
+            "dropped_reason": (
+                "479 hours correspond to unrecorded power meter communication outages "
+                "spanning > 4 hours in raw ele.csv (e.g. Nov 16-28 2018, Aug 20-23 2018), "
+                "plus ~118 subsequent 24-hour lag re-initialization rows."
+            ),
+            "is_monotonic": bool(joint_data["timestamp"].is_monotonic_increasing),
+            "is_unique_timestamps": bool(not joint_data["timestamp"].duplicated().any())
         }
     }
 
-    return occupancy_data, energy_data, validation_report
+    return occupancy_data, energy_data, joint_data, validation_report
