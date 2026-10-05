@@ -1,0 +1,28 @@
+File,Category,Size (MB),Rows,Cols,Start Time,End Time,Step,Dup Timestamps,Total Missing,Constant Cols
+ele.csv,Energy / Submeters,5.88,103048,7,2018-01-01 01:00:00,2021-01-01 00:00:00,0 days 00:15:00,0,71092,0
+rtu_econ_sp.csv,HVAC Control Setpoints,39.28,1384223,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,51,0,0
+rtu_sa_p_sp.csv,HVAC Control Setpoints,54.75,1407300,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,34,41875,0
+rtu_sa_t_sp.csv,HVAC Control Setpoints,74.4,1578292,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,51,0,0
+zone_temp_sp_c.csv,HVAC Control Setpoints,38.85,237133,52,2018-09-15 10:00:00,2021-01-01 00:00:00,0 days 00:05:00,0,1401623,0
+zone_temp_sp_h.csv,HVAC Control Setpoints,37.77,237126,52,2018-09-15 10:00:00,2021-01-01 00:00:00,0 days 00:05:00,0,1400521,0
+ashp_cw.csv,HVAC Operational Data,1.65,43979,4,2020-08-01 07:00:00,2020-12-31 23:50:00,0 days 00:05:00,0,0,0
+ashp_hw.csv,HVAC Operational Data,5.29,124487,4,2019-10-26 18:05:00,2020-12-31 23:50:00,0 days 00:05:00,1,0,0
+ashp_meter.csv,HVAC Operational Data,1.43,43978,2,2020-08-01 07:05:00,2020-12-31 23:50:00,0 days 00:05:00,0,0,0
+hp_hws_temp.csv,HVAC Operational Data,22.15,1048575,2,2018-01-01 00:00:00,2020-05-02 11:57:00,0 days 00:01:00,4,0,0
+rtu_fan_spd.csv,HVAC Operational Data,82.56,1382051,9,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,0,0,0
+rtu_ma_t.csv,HVAC Operational Data,47.71,1382778,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,51,0,0
+rtu_oa_damper.csv,HVAC Operational Data,45.18,1384223,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,51,0,0
+rtu_oa_fr.csv,HVAC Operational Data,78.48,1384223,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,51,0,0
+rtu_oa_t.csv,HVAC Operational Data,47.72,1382778,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,51,0,0
+rtu_plenum_p.csv,HVAC Operational Data,131.9,1381902,9,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,0,0,0
+rtu_ra_t.csv,HVAC Operational Data,47.68,1382778,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,51,0,0
+rtu_sa_fr.csv,HVAC Operational Data,92.08,1407353,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,34,42596,0
+rtu_sa_t.csv,HVAC Operational Data,56.45,1407323,5,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,34,42041,0
+uft_fan_spd.csv,HVAC Operational Data,381.03,1511261,52,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,33484,5196780,0
+uft_hw_valve.csv,HVAC Operational Data,440.77,2072154,45,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,594708,4601623,0
+zone_co2.csv,Indoor Environmental Quality,37.22,565481,12,2019-08-19 01:33:00,2021-01-01 00:00:00,0 days 00:01:00,11763,0,0
+zone_temp_exterior.csv,Indoor Environmental Quality,401.4,1511904,52,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:01:00,34456,5213819,0
+zone_temp_interior.csv,Indoor Environmental Quality,31.13,149696,17,2018-02-22 00:30:00,2021-01-01 00:00:00,0 days 00:10:00,0,63167,0
+occ.csv,Occupancy / Occupant Proxy,11.12,396193,3,2018-05-22 07:00:00,2019-02-21 10:12:00,0 days 00:01:00,0,0,0
+wifi.csv,Occupancy / Occupant Proxy,2.61,101047,5,2018-05-22 00:00:00,2020-12-31 23:55:00,0 days 00:05:00,12,14688,0
+site_weather.csv,Outdoor Weather,5.07,105217,6,2018-01-01 00:00:00,2021-01-01 00:00:00,0 days 00:15:00,0,0,0
