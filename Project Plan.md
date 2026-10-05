@@ -124,205 +124,45 @@ Created:
 
 ------------------------------------------------------------------------
 
-# Phase 3 --- Model Training & Evaluation `[NEXT]`
+# Phase 3 --- Model Training & Evaluation `[COMPLETED]`
 
-Create reusable modules in:
-- `src/occupancy_model.py`
-- `src/energy_model.py`
-- `src/evaluate.py`
+Created:
+- `src/occupancy_model.py` (data loading, candidate classifiers, headcount regression, serialization)
+- `src/energy_model.py` (candidate energy regressors, chained forecasting, serialization)
+- `src/evaluation.py` (classification & regression metrics, threshold tuning, publication plotting)
+- `notebooks/02_occupancy_prediction.ipynb` (executed in-place with all rich outputs)
+- `notebooks/03_energy_prediction.ipynb` (executed in-place with all rich outputs)
+- `models/occupancy/` (Random Forest champion classifier, metadata, threshold $T^*=0.51$)
+- `models/energy/` (Ridge Regression champion forecaster, scaler, metadata)
+- `docs/phase3_results.json` (machine-readable experiment registry)
+- `docs/phase3_model_training.md` (detailed academic training and evaluation report)
+- `docs/phase3_validation.md` (20-item verification checklist)
+- `tests/test_modeling.py` (8 automated tests; 17/17 project unit tests passing)
+- `docs/figures/models/` (9 publication-quality diagnostic plots)
 
-### Tasks
-
--   Load raw Building 59 files across the verified South Wing 275-day overlap window (`2018-05-22` to `2019-02-21`).
--   Resample multi-rate sensors to uniform hourly resolution (`freq='1h'`).
--   Apply physical sensor cleaning:
-    - DS18B20 power-on reset (`85.0°C`) and ground disconnect (`0.0°C`) cleaned and interpolated.
-    - Negative CT power drift clamped to `0.0 kW`.
--   **Electrical Submeter Gap Interpolation Rule:**
-    - Short electrical gaps $< 4$ consecutive hours ($< 16$ 15-min intervals) are linearly interpolated.
-    - Long electrical gaps $\ge 4$ consecutive hours are strictly dropped.
-    - *Rationale:* Commercial baseloads exhibit high autocorrelation over sub-4h intervals; gaps $\ge 4$ hours cross diurnal cycles and would corrupt ML training if synthesized.
--   **Explicit Contiguous Target Shift ($t \to t+1$):**
-    - Target variables are shifted 1 hour forward (`shift(-1)`), enforcing strict contiguity ($\Delta t = 1\text{ h}$). Any target spanning a telemetry outage is set to `NaN` and dropped.
--   Generate finalized modeling tables in `data/processed/`:
-    - `occupancy_data.parquet` (6,547 rows, 37 cols, 0 nulls)
-    - `energy_data.parquet` (5,945 rows, 45 cols, 0 nulls)
-    - `joint_modeling_data.parquet` (5,945 rows, 61 cols, 0 nulls)
-
-### Important
-
-Do not fit transformations on the entire dataset before splitting.
-Preprocessing must avoid data leakage.
-
-### Deliverable
-
-Clean preprocessing pipeline and validated modeling tables in `data/processed/`.
+### Key Results Summary
+- **Champion Occupancy Classifier**: Random Forest ($T^*=0.51$)
+  - Validation F1: **0.9377** | Validation ROC-AUC: **0.9433** | Balanced Accuracy: **0.8640**
+  - Test F1: **0.9170** | Test Precision: **0.9018** | Test Recall: **0.9327** | Test ROC-AUC: **0.9364**
+- **Champion Energy Forecaster**: Ridge Regression ($\alpha=10$)
+  - Validation RMSE (Chained): **6.2754 kWh** | Validation MAE: **5.0992 kWh** | $R^2$: **0.3843**
+  - Test MAE (Oracle): **7.7061 kWh** | Test RMSE (Oracle): **9.8759 kWh**
+  - Test MAE (Chained): **7.6733 kWh** | Test RMSE (Chained): **9.8357 kWh**
+  - Error Propagation Penalty ($\Delta\text{MAE}$): **-0.0328 kWh** (zero degradation from Stage 1 occupancy forecast)
 
 ------------------------------------------------------------------------
 
-# Phase 4 --- Feature Engineering
+# Phase 4 --- Counterfactual Optimization & Simulation `[NEXT]`
 
 Create:
+- `src/optimizer.py`
+- `src/simulator.py`
+- `notebooks/04_optimization_simulation.ipynb`
 
-`src/features.py`
-
-### Temporal features (Strictly Deterministic)
-
--   Hour, Day of week, Month, Weekend indicator, Business hours indicator
--   Trigonometric cyclical coordinates: `hour_sin`, `hour_cos`, `day_of_week_sin`, etc.
-
-### Environmental & Physical Features
-
--   Indoor mean, min, max temperatures, 1-hour thermal difference (`indoor_temp_diff_1h`)
--   Thermodynamic envelope gradient: `temp_gradient_in_out = indoor_temp_mean - outdoor_temp_c`
--   Weather: outdoor dry-bulb temperature, relative humidity, dew point, solar radiation
--   HVAC control feedbacks: South RTU fan speed (`%`), outdoor air damper position (`%`)
-
-### Causal Lag Features ($k \ge 1$, No Lookahead)
-
--   Permitted orders: $k \in \{1\text{h}, 2\text{h}, 24\text{h}\}$ relative to observation time $t$.
--   Occupancy lags: `is_occupied_lag_1h/2h/24h`, `occ_total_mean_lag_1h/2h/24h`
--   Energy lags: `south_wing_total_kwh_lag_1h/2h/24h`, submeter lags
-
-### Causal Rolling Features (Strictly Shifted)
-
--   Rolling statistics computed on shifted series (`shift(1).rolling(W)`):
-    - `rolling_mean_3h`, `rolling_std_3h`, `rolling_mean_6h`, `rolling_std_6h`, `rolling_mean_24h`, `rolling_std_24h`
-
-### Deliverable
-
-Reusable feature-engineering pipeline with verified zero lookahead leakage.
-
-------------------------------------------------------------------------
-
-# Phase 5 --- Occupancy Prediction (Forecasting Horizon: $t \to t+1$)
-
-Create:
-
-`notebooks/02_occupancy_prediction.ipynb`
-
-and reusable code in:
-
-`src/occupancy_model.py`
-
-### Targets
-
-1. **Primary Binary Classification:**
-   ``` text
-   is_occupied_next_hour in {0, 1}
-   ```
-   (Class balance: 56.1% occupied, 43.9% unoccupied)
-2. **Secondary Headcount Regression:**
-   ``` text
-   occ_total_mean_next_hour >= 0.0
-   ```
-
-### Models
-
-Start with:
-
-1.  Logistic Regression (interpretable baseline)
-2.  Decision Tree Classifier
-3.  Random Forest Classifier
-
-Optionally:
-
-4.  Gradient Boosting Classifier
-5.  XGBoost Classifier
-
-### Evaluation
-
-Calculate:
-
--   Precision, Recall, F1-score
--   ROC-AUC, PR-AUC
--   Confusion matrix
--   Strict chronological split (Train: May–Nov 2018, Val: Dec 2018–Jan 10 2019, Test: Jan 11–Feb 21 2019)
-
-### Model selection
-
-Select the final model based on validation F1-score and generalization stability.
-
-### Deliverables
-
--   Trained model
--   Evaluation results & comparison table
--   Confusion matrix
--   Feature importance analysis
-
-------------------------------------------------------------------------
-
-# Phase 6 --- Energy Consumption Prediction (Forecasting Horizon: $t \to t+1$)
-
-Create:
-
-`notebooks/03_energy_prediction.ipynb`
-
-and:
-
-`src/energy_model.py`
-
-### Targets
-
-1. **Primary Whole-Zone Energy:**
-   ``` text
-   south_wing_total_kwh_next_hour >= 0.0 (kWh)
-   ```
-2. **Multi-End-Use Submeters:**
-   - `lig_S_kwh_next_hour` (Lighting kWh)
-   - `mels_S_kwh_next_hour` (Plug-load kWh)
-   - `hvac_S_kwh_next_hour` (HVAC kWh)
-
-### Models
-
-Start with:
-
-1.  Linear / Ridge Regression (interpretable baseline)
-2.  Decision Tree Regressor
-3.  Random Forest Regressor
-
-Optionally:
-
-4.  Gradient Boosting Regressor
-5.  XGBoost Regressor
-
-### Evaluation & Chained Pipeline Strategy
-
-Calculate:
-
--   MAE, RMSE, R², MAPE (where numerically safe)
-
-**Dual Evaluation Strategy:**
-1. **Oracle Energy Model (Upper Bound):**
-   Evaluated with historical ground-truth occupancy at $t+1$ to measure pure energy regression performance.
-2. **Chained Inference Pipeline (Real Deployment):**
-   Evaluated on the holdout test set using out-of-sample predicted occupancy $\hat{y}^{\text{occ}}_{t+1}$ from $M_{\text{occ}}$ to quantify realistic cascading errors.
-
-### Deliverables
-
--   Model comparison table
--   Actual vs predicted plots
--   Residual analysis
--   Feature importance
--   Saved final model
-
-------------------------------------------------------------------------
-
-# Phase 7 --- Explainability
-
-Optional but recommended.
-
-Use:
-
--   Feature importance
--   Permutation importance
--   SHAP
-
-Answer:
-
-> What factors cause the model to predict higher energy consumption?
-
-Only report findings supported by the trained model and data.
+### Objectives
+- Perform model-based counterfactual scenario search over candidate HVAC setpoints (`rtu_south_fan_spd_mean_next_hour`, `rtu_south_damper_pct_mean_next_hour`) and lighting controls.
+- Enforce operational and comfort constraints (ASHRAE Standard 55 thermal comfort bounds).
+- Simulate before/after energy and cost savings across the test partition.
 
 ------------------------------------------------------------------------
 

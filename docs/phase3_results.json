@@ -1,0 +1,247 @@
+{
+  "metadata": {
+    "phase": "Phase 3 \u2014 Model Training & Evaluation",
+    "execution_timestamp": "2026-10-06T01:32:38.424345",
+    "random_seed": 42,
+    "train_range": [
+      "2018-05-23 07:00:00",
+      "2018-11-30 23:00:00"
+    ],
+    "val_range": [
+      "2018-12-01 00:00:00",
+      "2019-01-10 23:00:00"
+    ],
+    "test_range": [
+      "2019-01-11 00:00:00",
+      "2019-02-21 09:00:00"
+    ]
+  },
+  "occupancy_classification": {
+    "validation_results": [
+      {
+        "Model": "Random Forest",
+        "Val Precision": 0.9294,
+        "Val Recall": 0.9461,
+        "Val F1 (Tuned)": 0.9377,
+        "Val F1 (0.5)": 0.9365,
+        "PR-AUC": 0.9815,
+        "ROC-AUC": 0.9433,
+        "Bal Acc": 0.864,
+        "Accuracy": 0.9054,
+        "Optimal Threshold": 0.51
+      },
+      {
+        "Model": "LightGBM",
+        "Val Precision": 0.9151,
+        "Val Recall": 0.9521,
+        "Val F1 (Tuned)": 0.9332,
+        "Val F1 (0.5)": 0.9251,
+        "PR-AUC": 0.9823,
+        "ROC-AUC": 0.9447,
+        "Bal Acc": 0.842,
+        "Accuracy": 0.8975,
+        "Optimal Threshold": 0.39
+      },
+      {
+        "Model": "XGBoost",
+        "Val Precision": 0.9247,
+        "Val Recall": 0.9371,
+        "Val F1 (Tuned)": 0.9309,
+        "Val F1 (0.5)": 0.9269,
+        "PR-AUC": 0.9818,
+        "ROC-AUC": 0.9437,
+        "Bal Acc": 0.8527,
+        "Accuracy": 0.8953,
+        "Optimal Threshold": 0.48
+      },
+      {
+        "Model": "Decision Tree",
+        "Val Precision": 0.9297,
+        "Val Recall": 0.9311,
+        "Val F1 (Tuned)": 0.9304,
+        "Val F1 (0.5)": 0.9164,
+        "PR-AUC": 0.9765,
+        "ROC-AUC": 0.94,
+        "Bal Acc": 0.8588,
+        "Accuracy": 0.8953,
+        "Optimal Threshold": 0.29
+      },
+      {
+        "Model": "Logistic Regression (L2)",
+        "Val Precision": 0.8619,
+        "Val Recall": 0.9626,
+        "Val F1 (Tuned)": 0.9095,
+        "Val F1 (0.5)": 0.8581,
+        "PR-AUC": 0.94,
+        "ROC-AUC": 0.8673,
+        "Bal Acc": 0.7472,
+        "Accuracy": 0.8559,
+        "Optimal Threshold": 0.24
+      }
+    ],
+    "champion_model": "Random Forest",
+    "champion_threshold": 0.51,
+    "final_test_metrics": {
+      "accuracy": 0.8712,
+      "balanced_accuracy": 0.8032,
+      "precision": 0.9018,
+      "recall": 0.9327,
+      "f1": 0.917,
+      "confusion_matrix": [
+        [
+          159,
+          77
+        ],
+        [
+          51,
+          707
+        ]
+      ],
+      "roc_auc": 0.9364,
+      "pr_auc": 0.9805
+    }
+  },
+  "occupancy_headcount_regression": {
+    "validation_results": [
+      {
+        "Model": "LightGBM",
+        "Raw MAE": 3.5521,
+        "Raw RMSE": 6.1497,
+        "Raw R\u00b2": 0.776,
+        "Log1p MAE": 3.3793,
+        "Log1p RMSE": 6.5799,
+        "Log1p R\u00b2": 0.7436,
+        "Preferred Target Regime": "raw"
+      },
+      {
+        "Model": "XGBoost",
+        "Raw MAE": 3.7774,
+        "Raw RMSE": 6.1781,
+        "Raw R\u00b2": 0.7739,
+        "Log1p MAE": 3.4722,
+        "Log1p RMSE": 7.0019,
+        "Log1p R\u00b2": 0.7096,
+        "Preferred Target Regime": "raw"
+      },
+      {
+        "Model": "Random Forest",
+        "Raw MAE": 3.4362,
+        "Raw RMSE": 6.2087,
+        "Raw R\u00b2": 0.7717,
+        "Log1p MAE": 3.5807,
+        "Log1p RMSE": 6.8556,
+        "Log1p R\u00b2": 0.7216,
+        "Preferred Target Regime": "raw"
+      },
+      {
+        "Model": "Ridge Regression",
+        "Raw MAE": 5.9381,
+        "Raw RMSE": 8.1913,
+        "Raw R\u00b2": 0.6026,
+        "Log1p MAE": 5.705,
+        "Log1p RMSE": 13.2818,
+        "Log1p R\u00b2": -0.0448,
+        "Preferred Target Regime": "raw"
+      }
+    ],
+    "champion_model": "LightGBM"
+  },
+  "energy_forecasting": {
+    "validation_results": [
+      {
+        "Model": "Ridge Regression",
+        "Oracle MAE": 5.0815,
+        "Oracle RMSE": 6.2471,
+        "Oracle R\u00b2": 0.3899,
+        "Oracle MAPE (%)": 84.99,
+        "Chained MAE": 5.0992,
+        "Chained RMSE": 6.2754,
+        "Chained R\u00b2": 0.3843,
+        "Chained MAPE (%)": 85.42,
+        "MAE Degradation": 0.0177
+      },
+      {
+        "Model": "Random Forest",
+        "Oracle MAE": 6.2131,
+        "Oracle RMSE": 7.6022,
+        "Oracle R\u00b2": 0.0965,
+        "Oracle MAPE (%)": 147.34,
+        "Chained MAE": 6.2125,
+        "Chained RMSE": 7.6017,
+        "Chained R\u00b2": 0.0966,
+        "Chained MAPE (%)": 147.3,
+        "MAE Degradation": -0.0006
+      },
+      {
+        "Model": "Extra Trees",
+        "Oracle MAE": 6.4731,
+        "Oracle RMSE": 7.9109,
+        "Oracle R\u00b2": 0.0216,
+        "Oracle MAPE (%)": 151.69,
+        "Chained MAE": 6.4869,
+        "Chained RMSE": 7.9315,
+        "Chained R\u00b2": 0.0165,
+        "Chained MAPE (%)": 152.01,
+        "MAE Degradation": 0.0138
+      },
+      {
+        "Model": "LightGBM",
+        "Oracle MAE": 6.4246,
+        "Oracle RMSE": 7.999,
+        "Oracle R\u00b2": -0.0003,
+        "Oracle MAPE (%)": 149.77,
+        "Chained MAE": 6.4307,
+        "Chained RMSE": 8.0136,
+        "Chained R\u00b2": -0.0039,
+        "Chained MAPE (%)": 149.97,
+        "MAE Degradation": 0.0061
+      },
+      {
+        "Model": "XGBoost",
+        "Oracle MAE": 6.5503,
+        "Oracle RMSE": 8.1174,
+        "Oracle R\u00b2": -0.0301,
+        "Oracle MAPE (%)": 159.2,
+        "Chained MAE": 6.5676,
+        "Chained RMSE": 8.146,
+        "Chained R\u00b2": -0.0374,
+        "Chained MAPE (%)": 159.7,
+        "MAE Degradation": 0.0173
+      }
+    ],
+    "champion_model": "Ridge Regression",
+    "final_test_metrics_oracle": {
+      "mae": 7.7061,
+      "rmse": 9.8759,
+      "r2": -0.0723,
+      "mape": 59.69
+    },
+    "final_test_metrics_chained": {
+      "mae": 7.6733,
+      "rmse": 9.8357,
+      "r2": -0.0636,
+      "mape": 59.56
+    },
+    "test_error_propagation_penalty": -0.03279999999999994
+  },
+  "submeter_diagnostic_results": {
+    "hvac": {
+      "mae": 6.0578,
+      "rmse": 7.7327,
+      "r2": -0.3395,
+      "mape": 308.73
+    },
+    "lig": {
+      "mae": 0.4736,
+      "rmse": 0.7751,
+      "r2": 0.8303,
+      "mape": 183.74
+    },
+    "mels": {
+      "mae": 0.4708,
+      "rmse": 0.729,
+      "r2": 0.902,
+      "mape": 17.67
+    }
+  }
+}
