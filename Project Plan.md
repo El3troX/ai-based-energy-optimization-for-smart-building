@@ -37,63 +37,66 @@ Documentation
 
 ------------------------------------------------------------------------
 
-# Phase 0 --- Repository Setup
+# Phase 0 --- Repository Setup `[COMPLETED]`
 
 ### Tasks
-
--   Create repository structure.
--   Create Python virtual environment.
--   Create `requirements.txt`.
--   Create `.gitignore`.
--   Create initial README.
--   Create `src/`, `notebooks/`, `data/`, `models/`, `dashboard/`, and
-    `tests/`.
+- [x] Create repository structure (`src/`, `notebooks/`, `data/`, `models/`, `dashboard/`, `tests/`, `docs/`).
+- [x] Create Python virtual environment and `requirements.txt`.
+- [x] Create `.gitignore` and initial `README.md`.
+- [x] Initialize Git repository and connect to GitHub remote (`El3troX/ai-based-energy-optimization-for-smart-building`).
 
 ### Deliverable
-
-A clean, runnable repository with no ML implementation yet.
+A clean, runnable repository with reproducible environment configuration.
 
 ------------------------------------------------------------------------
 
-# Phase 1 --- Dataset Selection
-
-## Goal
-
-Find a public smart-building dataset suitable for both occupancy
-prediction and energy prediction.
-
-### Dataset requirements
-
-Prefer a dataset containing as many of these as possible:
-
--   Timestamp
--   Energy consumption
--   Occupancy
--   Temperature
--   Humidity
--   CO2
--   Lighting
--   HVAC/device information
-
-If a single dataset cannot support every component, document the
-limitation instead of fabricating variables.
+# Step 0 --- Dataset Acquisition & Schema Discovery `[COMPLETED]`
 
 ### Tasks
-
-1.  Evaluate candidate datasets.
-2.  Record source and license.
-3.  Download the selected dataset.
-4.  Place the original file in `data/raw/`.
-5.  Document columns and units.
-6.  Determine prediction targets.
+- [x] Download full Building 59 dataset (27 raw CSVs, ~2.38 GB uncompressed) to `data/raw/`.
+- [x] Inspect schemas, timestamps, missingness, and physical units across all 27 files.
+- [x] Generate machine-readable inventory `docs/dataset_inventory.csv`.
+- [x] Document physical relationships, sensor metadata, and CO2 non-overlap constraint in `docs/dataset.md`.
 
 ### Deliverable
-
-`docs/dataset.md`
+`docs/dataset.md` and `docs/dataset_inventory.csv`.
 
 ------------------------------------------------------------------------
 
-# Phase 2 --- Exploratory Data Analysis
+# Phase 1 --- Modeling Table Construction & Methodology Lock-In `[COMPLETED]`
+
+### Tasks
+- [x] Define spatial modeling scope: South Wing Office Zone (Floors 3 & 4).
+- [x] Establish uniform 1-hour temporal resolution with physical integration ($\overline{P}_{\text{kW}} \times 1\text{ h} = \text{kWh}$).
+- [x] Enforce sensor cleaning: DS18B20 error codes (`85.0°C`/`0.0°C`) and CT negative zero-drift clamping.
+- [x] Implement linear interpolation for short electrical gaps $< 4$ consecutive hours; drop macro outages $\ge 4$ hours.
+- [x] Implement zero-lookahead feature engineering in `src/features.py` (calendar, cyclical, thermal gradients, lags $t-k$, rolling shifted).
+- [x] Enforce explicit 1-hour-ahead contiguous target shifting ($t \to t+1$): `is_occupied_next_hour`, `south_wing_total_kwh_next_hour`.
+- [x] Create explicit future HVAC candidate controls: `rtu_south_fan_spd_mean_next_hour`, `rtu_south_damper_pct_mean_next_hour`.
+- [x] Export validated modeling tables: `occupancy_data.parquet` (6,547 rows), `energy_data.parquet` (5,945 rows), `joint_modeling_data.parquet` (5,945 rows).
+- [x] Produce comprehensive specification `docs/modeling_specification.md` and report `docs/phase1_modeling_tables.md`.
+
+### Deliverable
+Validated Parquet tables in `data/processed/` and master specifications in `docs/`.
+
+------------------------------------------------------------------------
+
+# Pre-ML Methodology & Leakage Audit `[PASSED]`
+
+### Tasks
+- [x] Critical Lag Audit: Validate $z_{\text{lag}\_kh} = z_{t - kh}$ on actual historical timestamps (fails if references $t, t-1, t-23$).
+- [x] Rolling Window Audit: Verify rolling statistics contain ONLY historical observations $t-1 \dots t-W$.
+- [x] Target Shift Audit: Verify contiguous alignment $t \to t+1$ for occupancy and energy targets.
+- [x] Chained Pipeline Audit: Confirm inference requires zero ground-truth future data; maintain Oracle vs Chained evaluation modes.
+- [x] Control Feature Audit: Explicitly separate observed controls at $t$ from candidate controls at $t+1$.
+- [x] Documentation Audit: Synchronize all specs across `Context.md`, `Project Plan.md`, `README.md`, `docs/`.
+
+### Deliverable
+`docs/pre_ml_audit.md` and passing automated test suite `tests/test_preprocessing.py` (9/9 passed).
+
+------------------------------------------------------------------------
+
+# Phase 2 --- Exploratory Data Analysis `[NEXT]`
 
 Create:
 

@@ -10,29 +10,41 @@ Buildings consume significant electrical energy through HVAC systems, lighting, 
 
 This project delivers a complete pipeline:
 ```text
-Building Data (Sensors & Meters)
-             ↓
-      Data Preprocessing
-             ↓
-     Feature Engineering
-             ↓
-   +---------+---------+
-   |                   |
-   v                   v
-Occupancy Model   Energy Model
-(Classification)  (Regression)
-   |                   |
-   +---------+---------+
-             ↓
-    Optimization Engine
- (Constrained Recommendation)
-             ↓
-   Before/After Simulation
- (Energy / Cost / CO2 Savings)
-             ↓
-   Interactive Dashboard
-        (Streamlit)
+Current Observations at time t (Environment, Weather, HVAC, Lags)
+                         │
+                         ▼
+             Occupancy Forecast Model (M_occ)
+                         │
+                         ▼
+        Predicted Occupancy at t+1 (is_occupied_next_hour)
+                         │
+                         ▼
+              Energy Forecast Model (M_energy)
+                         │
+                         ▼
+      Predicted Energy at t+1 (south_wing_total_kwh_next_hour)
+                         │
+                         ▼
+       Optimization Engine (Counterfactual Scenario Search)
+                         │
+                         ▼
+         Energy & Cost-Optimized Setpoint Recommendations
 ```
+
+---
+
+## 🚦 Project Status & Roadmap
+
+| Phase | Description | Status | Deliverables |
+|---|---|---|---|
+| **Phase 0** | Repository Architecture & Environments | **COMPLETED** | Repo, `.gitignore`, `requirements.txt` |
+| **Step 0** | Dataset Inspection & Schema Discovery | **COMPLETED** | `docs/dataset.md`, `docs/dataset_inventory.csv` |
+| **Phase 1** | Modeling Table Construction ($t \to t+1$) | **COMPLETED** | `data/processed/*.parquet`, `docs/phase1_modeling_tables.md` |
+| **Audit** | Final Pre-ML Implementation vs Spec Audit | **PASSED** | `docs/pre_ml_audit.md`, `tests/test_preprocessing.py` (9/9 passing) |
+| **Phase 2** | Exploratory Data Analysis (EDA) | **NEXT** | `notebooks/01_eda.ipynb` |
+| **Phase 3** | Model Training & Evaluation | **PENDING** | `src/occupancy_model.py`, `src/energy_model.py` |
+| **Phase 4** | Counterfactual Optimization & Simulation | **PENDING** | `src/optimizer.py`, `src/simulator.py` |
+| **Phase 5** | Interactive Streamlit BEMS Dashboard | **PENDING** | `dashboard/app.py` |
 
 ---
 
@@ -41,7 +53,7 @@ Occupancy Model   Energy Model
 - **Primary Dataset:** *Three-Year Building Operational Performance Dataset — Building 59* (Lawrence Berkeley National Laboratory)
 - **Source:** Dryad repository ([DOI: 10.7941/D1N33Q](https://doi.org/10.7941/D1N33Q))
 - **Study Reference:** Luo, Na et al. (2022). *A three-year dataset supporting research on building energy management and occupancy analytics*, Scientific Data.
-- **Coverage:** 3 years of continuous operational readings across two office floors (each 2,325 m²) including whole-building electricity, end-use submeters, HVAC system status, indoor climate (temperature, humidity, CO2), outdoor weather, and occupant counts.
+- **Coverage:** 275-day verified sensor overlap (May 22, 2018 to February 21, 2019) across South Wing office floors (Floors 3 & 4) including whole-building electricity, end-use submeters, HVAC system status, indoor climate, outdoor weather, and camera occupant counts.
 
 ---
 

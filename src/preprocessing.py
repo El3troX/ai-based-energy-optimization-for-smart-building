@@ -321,21 +321,21 @@ def build_modeling_tables(
     zt_h = load_clean_indoor_temperature(os.path.join(clean_dir, "zone_temp_interior.csv"), freq="1h")
     rtu_h = load_clean_rtu_south(clean_dir, freq="1h")
 
-    # 2. Join across shared timestamp index
-    combined = pd.concat([occ_h, ele_h, wea_h, zt_h, rtu_h], axis=1, join="inner")
-
-    # 3. Restrict strictly to verified overlap window
+    # 2. Restrict strictly to verified overlap window and reindex onto complete regular hourly grid
     t_start = pd.to_datetime(start_time)
     t_end = pd.to_datetime(end_time)
-    combined = combined.loc[(combined.index >= t_start) & (combined.index <= t_end)].copy()
+    full_index = pd.date_range(start=t_start, end=t_end, freq="1h")
+
+    # Reindex onto full regular grid so shift(1) is guaranteed to be t - 1h and shift(-1) is t + 1h
+    combined = pd.concat([occ_h, ele_h, wea_h, zt_h, rtu_h], axis=1).reindex(full_index)
     initial_rows = len(combined)
 
-    # 4. Feature Engineering: Calendar and Thermodynamic features
+    # 3. Feature Engineering: Calendar and Thermodynamic features
     combined = add_calendar_features(combined)
     combined = add_cyclical_time_features(combined)
     combined = add_thermal_features(combined)
 
-    # 5. Build OCCUPANCY MODELING TABLE (Forecasting Horizon: t -> t+1)
+    # 4. Build OCCUPANCY MODELING TABLE (Forecasting Horizon: t -> t+1)
     occ_df = combined.copy()
     occ_df = add_lag_features(occ_df, columns=["occ_total_mean", "is_occupied"], lags=[1, 2, 24])
     occ_df = add_rolling_features(occ_df, columns=["occ_total_mean"], windows=[3, 6, 24])
@@ -368,9 +368,9 @@ def build_modeling_tables(
     ]
 
     occupancy_data = occ_df[occ_target_cols + occ_feature_cols].dropna().copy()
-    occupancy_data.reset_index(inplace=True)
+    occupancy_data.reset_index(names=["timestamp"], inplace=True)
 
-    # 6. Build ENERGY MODELING TABLE (Forecasting Horizon: t -> t+1)
+    # 5. Build ENERGY MODELING TABLE (Forecasting Horizon: t -> t+1)
     energy_df = combined.copy()
     energy_df = add_lag_features(
         energy_df,
@@ -398,14 +398,23 @@ def build_modeling_tables(
         suffix="_next_hour"
     )
 
+    # Planned/candidate HVAC control variables for hour t+1 (Ground truth during training / Candidate controls during optimization)
+    energy_df = _apply_contiguous_shift(
+        energy_df,
+        target_cols=["rtu_south_fan_spd_mean", "rtu_south_damper_pct_mean"],
+        suffix="_next_hour"
+    )
+
     energy_target_cols = [f"{c}_next_hour" for c in energy_targets_to_shift]
     energy_feature_cols = [
         # Future Occupancy Predictor at t+1 (Ground truth during training / Predicted at inference)
         "is_occupied_next_hour", "occ_total_mean_next_hour",
+        # Planned/Candidate HVAC Controllable Operations for hour t+1 (Ground truth during training / Evaluated candidate during optimization)
+        "rtu_south_fan_spd_mean_next_hour", "rtu_south_damper_pct_mean_next_hour",
         # Environmental & Meteorological at time t
         "indoor_temp_mean", "indoor_temp_diff_1h", "temp_gradient_in_out",
         "outdoor_temp_c", "relative_humidity", "dew_point_temp_c", "solar_radiation",
-        # HVAC Controllable Operations at time t
+        # Observed HVAC Controls at time t
         "rtu_south_fan_spd_mean", "rtu_south_damper_pct_mean",
         # Temporal / Calendar at time t
         "hour", "day_of_week", "is_weekend", "is_business_hour", "month",
@@ -421,18 +430,17 @@ def build_modeling_tables(
     ]
 
     energy_data = energy_df[energy_target_cols + energy_feature_cols].dropna().copy()
-    energy_data.reset_index(inplace=True)
+    energy_data.reset_index(names=["timestamp"], inplace=True)
 
-    # 7. Build JOINT MODELING TABLE (Timestamp Intersection)
-    joint_timestamps = sorted(list(set(occupancy_data["timestamp"]).intersection(set(energy_data["timestamp"]))))
-    
-    # Merge on timestamp
+    # 6. Build JOINT MODELING TABLE (Timestamp Intersection)
     joint_data = pd.merge(
-        occupancy_data[["timestamp"] + occ_target_cols + [c for c in occ_feature_cols if c not in energy_feature_cols]],
+        occupancy_data,
         energy_data,
         on="timestamp",
-        how="inner"
+        how="inner",
+        suffixes=("", "_dup")
     )
+    joint_data = joint_data[[c for c in joint_data.columns if not c.endswith("_dup")]].copy()
 
     # 8. Integrity Verifications
     for name, df_table in [

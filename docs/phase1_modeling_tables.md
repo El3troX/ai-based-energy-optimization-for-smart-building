@@ -81,7 +81,7 @@ The pipeline is implemented in modular production scripts:
 
 - **File Path:** [data/processed/energy_data.parquet](file:///c:/Users/thund/OneDrive/Desktop/ML%20PROJECT/data/processed/energy_data.parquet) (also available as `.csv`)
 - **Row Count:** **5,945 rows**
-- **Column Count:** **45 columns** (1 timestamp + 4 targets + 40 features)
+- **Column Count:** **47 columns** (1 timestamp + 4 targets + 42 features)
 - **Time Range:** `2018-05-23 07:00:00` to `2019-02-21 09:00:00`
 - **Missingness After Preprocessing:** **0 missing values (0.0%)**
 - **Rows Removed:** 659 rows (9.98% of initial 6,604-hour overlap, due to initial 24h lag, submeter communication outages $\ge 4\text{ h}$, and boundary shifts)
@@ -96,11 +96,12 @@ The pipeline is implemented in modular production scripts:
   2. `lig_S_kwh_next_hour` (float): Overhead lighting electricity consumption (kWh) during hour $t+1$.
   3. `mels_S_kwh_next_hour` (float): Plug-load electricity consumption (kWh) during hour $t+1$.
   4. `hvac_S_kwh_next_hour` (float): HVAC equipment electricity consumption (kWh) during hour $t+1$.
-- **Features (40):**
-  - *Occupancy State (Predictors):* `is_occupied`, `occ_total_mean`
+- **Features (42):**
+  - *Occupancy State at $t+1$ (Predictors):* `is_occupied_next_hour`, `occ_total_mean_next_hour` (Ground truth in training / Predicted by $M_{\text{occ}}$ at inference)
+  - *Planned/Candidate HVAC Controls at $t+1$ (Predictors / Action Inputs):* `rtu_south_fan_spd_mean_next_hour`, `rtu_south_damper_pct_mean_next_hour` (Ground truth in training / Evaluated candidate action during optimization)
+  - *Observed HVAC Controls at time $t$:* `rtu_south_fan_spd_mean`, `rtu_south_damper_pct_mean`
   - *Indoor Environment:* `indoor_temp_mean`, `indoor_temp_diff_1h`, `temp_gradient_in_out`
   - *Outdoor Meteorology:* `outdoor_temp_c`, `relative_humidity`, `dew_point_temp_c`, `solar_radiation`
-  - *HVAC Controllable Operations:* `rtu_south_fan_spd_mean`, `rtu_south_damper_pct_mean`
   - *Calendar & Schedule:* `hour`, `day_of_week`, `is_weekend`, `is_business_hour`, `month`
   - *Cyclical Coordinates:* `hour_sin`, `hour_cos`, `day_of_week_sin`, `day_of_week_cos`, `month_sin`, `month_cos`
   - *Strictly Causal Energy Lags:* `south_wing_total_kwh_lag_1h`, `south_wing_total_kwh_lag_2h`, `south_wing_total_kwh_lag_24h`, `lig_S_kwh_lag_1h`, `lig_S_kwh_lag_2h`, `lig_S_kwh_lag_24h`, `mels_S_kwh_lag_1h`, `mels_S_kwh_lag_2h`, `mels_S_kwh_lag_24h`, `hvac_S_kwh_lag_1h`, `hvac_S_kwh_lag_2h`, `hvac_S_kwh_lag_24h`

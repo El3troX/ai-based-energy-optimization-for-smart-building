@@ -94,14 +94,18 @@ The pipeline forecasts future states for the upcoming hour $t+1$:
 
 ### 5.2 Strictly Causal Lag Definitions
 For any time series $z_t$, a lag feature of order $k$ is defined strictly as:
-$$z_{\text{lag}\_kh} = z_{t - (k - 1)} \quad \text{relative to } t \quad (k \ge 1)$$
-- Minimum lag step is $1$ hour.
-- Permitted lag orders: $k \in \{1, 2, 24\}$ (representing the previous hour, two hours prior, and the same hour on the previous day).
-- Zero or negative lags ($k \le 0$) are strictly prohibited in predictor matrices.
+$$z_{\text{lag}\_kh} = z_{t - kh} \quad \text{relative to } t \quad (k \ge 1)$$
+- For $k=1$: $z_{\text{lag}\_1h} = z_{t - 1h}$ (the observation at the previous hour).
+- For $k=2$: $z_{\text{lag}\_2h} = z_{t - 2h}$ (the observation two hours prior).
+- For $k=24$: $z_{\text{lag}\_24h} = z_{t - 24h}$ (the observation at the exact same hour on the previous day).
+- Minimum lag step is $1$ hour. Zero or negative lags ($k \le 0$) are strictly prohibited in predictor matrices.
 
 ### 5.3 Strictly Causal Rolling Window Definitions
 Rolling statistics (mean, standard deviation) over window $W \in \{3, 6, 24\}$ hours are computed strictly on shifted past observations:
-$$\text{rolling\_mean}_W(z)_t = \frac{1}{W} \sum_{i=1}^{W} z_{t - (i - 1)}$$
+$$\text{rolling\_mean}_W(z)_t = \frac{1}{W} \sum_{i=1}^{W} z_{t - i}$$
+- For $W=3$: $\text{rolling\_mean}_{3h}(z)_t = \frac{z_{t-1} + z_{t-2} + z_{t-3}}{3}$
+- For $W=6$: $\text{rolling\_mean}_{6h}(z)_t = \frac{z_{t-1} + z_{t-2} + \dots + z_{t-6}}{6}$
+- For $W=24$: $\text{rolling\_mean}_{24h}(z)_t = \frac{z_{t-1} + z_{t-2} + \dots + z_{t-24}}{24}$
 By applying `shift(1)` prior to `.rolling(W)`, concurrent observations at $t$ are excluded from the rolling window, eliminating lookahead leakage.
 
 ### 5.4 Feature Availability Matrix
@@ -114,13 +118,15 @@ By applying `shift(1)` prior to `.rolling(W)`, concurrent observations at $t$ ar
 | `outdoor_temp_c` | Weather | Yes ($t$) | Yes | Yes |
 | `relative_humidity` | Weather | Yes ($t$) | Yes | Yes |
 | `solar_radiation` | Weather | Yes ($t$) | Yes | Yes |
-| `rtu_south_fan_spd_mean` | HVAC Operational | Yes ($t$) | Yes | Yes |
-| `rtu_south_damper_pct_mean`| HVAC Operational | Yes ($t$) | Yes | Yes |
+| `rtu_south_fan_spd_mean` | Observed HVAC Controls | Yes ($t$) | Yes | Yes |
+| `rtu_south_damper_pct_mean`| Observed HVAC Controls | Yes ($t$) | Yes | Yes |
 | `calendar / cyclical` | Temporal | Yes (deterministic) | Yes | Yes |
 | `occ_total_mean_lag_1/2/24h`| Causal Lag | Yes ($t-1, t-2, t-24$) | Yes | No (captured via energy lags) |
 | `is_occupied_lag_1/2/24h` | Causal Lag | Yes ($t-1, t-2, t-24$) | Yes | No |
 | `is_occupied_next_hour` | Occupancy at $t+1$ | **Predicted** by $M_{\text{occ}}$ | **TARGET** | **PREDICTOR** |
 | `occ_total_mean_next_hour` | Headcount at $t+1$ | **Predicted** by $M_{\text{occ}}$ | **TARGET** | **PREDICTOR** |
+| `rtu_south_fan_spd_mean_next_hour` | Planned/Candidate Control at $t+1$ | **Candidate Action** from Optimizer | No | **PREDICTOR / CONTROL** |
+| `rtu_south_damper_pct_mean_next_hour` | Planned/Candidate Control at $t+1$ | **Candidate Action** from Optimizer | No | **PREDICTOR / CONTROL** |
 | `south_wing_total_kwh_lag_1/2/24h`| Causal Lag | Yes ($t-1, t-2, t-24$) | **No (Leakage)** | Yes |
 | `lig_S_kwh_lag_1/2/24h` | Causal Lag | Yes ($t-1, t-2, t-24$) | **No (Leakage)** | Yes |
 | `hvac_S_kwh_lag_1/2/24h`| Causal Lag | Yes ($t-1, t-2, t-24$) | **No (Leakage)** | Yes |

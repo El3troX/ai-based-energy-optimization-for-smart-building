@@ -20,7 +20,7 @@
   },
   "energy_table": {
     "rows": 5945,
-    "columns": 45,
+    "columns": 47,
     "start_time": "2018-05-23 07:00:00",
     "end_time": "2019-02-21 09:00:00",
     "targets": [
@@ -29,7 +29,7 @@
       "mels_S_kwh_next_hour",
       "hvac_S_kwh_next_hour"
     ],
-    "features_count": 40,
+    "features_count": 42,
     "missingness": 0,
     "rows_removed_due_to_lags_and_outages": 659,
     "percentage_removed": 9.98,
