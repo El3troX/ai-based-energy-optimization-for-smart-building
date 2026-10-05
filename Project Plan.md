@@ -152,6 +152,35 @@ Created:
 
 ------------------------------------------------------------------------
 
+# Phase 3.5 --- Forecast Robustness & Optimization Readiness Audit `[COMPLETED]`
+
+### Tasks
+- [x] Implement and benchmark naive energy baselines (Persistence $y_t$, Seasonal Naive $y_{t-24}$, lag feature).
+- [x] Evaluate baselines vs Ridge champion on Validation and Test splits; export `docs/phase3_baselines.json`.
+- [x] Perform forecast error decomposition by thermal regime ($<10^\circ\text{C}$, $10-16^\circ\text{C}$, $>16^\circ\text{C}$), occupancy state, working hours, and load magnitude.
+- [x] Conduct HVAC component-specific error attribution (`hvac_S_kwh_next_hour`) and correlate with physical variables.
+- [x] Derive control-safety occupancy threshold $T_{\text{safety}} = 0.30$ strictly from validation data (FNR $\le 1.5\%$).
+- [x] Audit historical support bounds for candidate controls: fan speed $[40\%, 90\%]$, outdoor air damper $[10\%, 90\%]$.
+- [x] Conduct counterfactual sensitivity sanity check: verify physical monotonicity (fan coefficient $+2.63$, damper coefficient $-0.88$).
+- [x] Formulate Optimization Readiness Gate decision: **READY WITH SAFEGUARDS**.
+- [x] Export master audit report `docs/phase3_robustness_audit.md` and machine-readable results `docs/phase3_robustness_results.json`.
+- [x] Add automated test suite `tests/test_robustness.py` (5 tests; 22/22 total project tests passing).
+
+### Key Results Summary
+- **Baseline Comparison**:
+  - Validation: Ridge beats Seasonal Naive ($\text{RMSE } 6.28\text{ vs } 7.43\text{ kWh}$, $R^2\ 0.38\text{ vs } 0.14$). Does not beat 1-step Persistence ($\text{RMSE } 4.57\text{ kWh}$, $R^2\ 0.67$), but persistence has zero control sensitivity ($\nabla_u \hat{y} = 0$).
+  - Test: Ridge is competitive with Seasonal Naive ($\text{RMSE } 9.84\text{ vs } 9.88\text{ kWh}$, $R^2\ -0.06\text{ vs } -0.07$).
+- **Root Cause of Test Negative $R^2$**:
+  - Model trained in summer/autumn (May–Nov, mean $15.5^\circ\text{C}$) learned cooling response.
+  - Winter test set (Jan–Feb, mean $9.8^\circ\text{C}$) activated space heating. In cold weather ($<10^\circ\text{C}$), model exhibits $-8.60\text{ kWh}$ bias. HVAC underprediction accounts for $76.7\%$ of total underprediction bias.
+- **Safety & Control Parameters**:
+  - Dual-threshold architecture: $T_{\text{class}} = 0.51$ (classification reporting), $T_{\text{safety}} = 0.30$ (control gating, $\text{FNR} = 1.50\%$, $\text{Recall} = 98.5\%$).
+  - Admissible control bounds: Fan Speed $[40\%, 90\%]$, Damper Opening $[10\%, 90\%]$.
+  - Physical surrogate response: Fan speed response strictly positive ($\frac{\partial E}{\partial \text{fan}} > 0$), economizer damper response strictly negative ($\frac{\partial E}{\partial \text{damper}} < 0$).
+- **Gate Verdict**: **READY WITH SAFEGUARDS** (proceeding as research simulation under explicit uncertainty, bounded candidate controls, and conservative occupancy safety gating).
+
+------------------------------------------------------------------------
+
 # Phase 4 --- Counterfactual Optimization & Simulation `[NEXT]`
 
 Create:
@@ -160,9 +189,9 @@ Create:
 - `notebooks/04_optimization_simulation.ipynb`
 
 ### Objectives
-- Perform model-based counterfactual scenario search over candidate HVAC setpoints (`rtu_south_fan_spd_mean_next_hour`, `rtu_south_damper_pct_mean_next_hour`) and lighting controls.
-- Enforce operational and comfort constraints (ASHRAE Standard 55 thermal comfort bounds).
-- Simulate before/after energy and cost savings across the test partition.
+- Perform model-based counterfactual scenario search over candidate HVAC setpoints (`rtu_south_fan_spd_mean_next_hour`, `rtu_south_damper_pct_mean_next_hour`) and lighting controls within audited support bounds ($[40\%, 90\%]$ fan, $[10\%, 90\%]$ damper).
+- Enforce operational and comfort constraints (ASHRAE Standard 55 thermal comfort bounds) and control-safety occupancy threshold ($T_{\text{safety}} = 0.30$).
+- Simulate before/after energy and cost savings across the test partition under surrogate validity safeguards.
 
 ------------------------------------------------------------------------
 

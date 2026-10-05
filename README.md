@@ -43,6 +43,7 @@ Current Observations at time t (Environment, Weather, HVAC, Lags)
 | **Audit** | Final Pre-ML Implementation vs Spec Audit | **PASSED** | `docs/pre_ml_audit.md`, `tests/test_preprocessing.py` (9/9 passing) |
 | **Phase 2** | Exploratory Data Analysis (EDA) | **COMPLETED** | `notebooks/01_eda.ipynb`, `docs/phase2_eda_report.md`, `docs/figures/eda/` |
 | **Phase 3** | Model Training & Evaluation | **COMPLETED** | `src/occupancy_model.py`, `src/energy_model.py`, `docs/phase3_model_training.md` |
+| **Phase 3.5**| Robustness & Readiness Audit | **COMPLETED** | `src/robustness.py`, `docs/phase3_robustness_audit.md`, `docs/phase3_baselines.json` |
 | **Phase 4** | Counterfactual Optimization & Simulation | **NEXT** | `src/optimizer.py`, `src/simulator.py` |
 | **Phase 5** | Interactive Streamlit BEMS Dashboard | **PENDING** | `dashboard/app.py` |
 
@@ -74,14 +75,15 @@ ai-based-energy-optimization-for-smart-building/
 │   ├── features.py        # Temporal, lag, and environmental features
 │   ├── occupancy_model.py # Occupancy prediction models
 │   ├── energy_model.py    # Energy consumption regression models
+│   ├── robustness.py      # Baselines, safety thresholds, and control bounds
 │   ├── optimizer.py       # Optimization layer (comfort/energy constraints)
 │   ├── simulator.py       # Baseline vs optimized operational simulation
 │   └── evaluation.py      # Standardized evaluation metrics
 │
 ├── models/                # Serialized model artifacts and scalers
 ├── dashboard/             # Interactive Streamlit BEMS dashboard
-├── docs/                  # Detailed data dictionary and reports
-├── tests/                 # Automated unit and integration tests
+├── docs/                  # Detailed data dictionary, audits, and reports
+├── tests/                 # Automated unit and integration tests (22 passing)
 ├── Context.md             # Project specification & guidelines
 ├── Project Plan.md        # Step-by-step development roadmap
 ├── requirements.txt       # Project dependencies

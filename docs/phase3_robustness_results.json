@@ -1,0 +1,356 @@
+{
+  "metadata": {
+    "phase": "Phase 3.5 \u2014 Forecast Robustness & Optimization Readiness Audit",
+    "generated_timestamp": "2026-10-06T01:49:04.560683"
+  },
+  "baselines_summary": {
+    "validation_ridge_vs_seasonal_naive": "Ridge beats Seasonal Naive on Validation (RMSE 6.28 vs 7.43 kWh, R2 0.38 vs 0.14)",
+    "validation_ridge_vs_persistence": "Ridge does not beat Persistence on Validation (Persistence RMSE 4.57 kWh, R2 0.67)",
+    "test_ridge_vs_seasonal_naive": "Ridge is competitive with Seasonal Naive on Test (RMSE 9.84 vs 9.88 kWh, R2 -0.06 vs -0.07)",
+    "test_ridge_vs_persistence": "Ridge does not beat Persistence on Test (Persistence RMSE 4.59 kWh, R2 0.77)"
+  },
+  "regime_analysis": {
+    "outdoor_temperature": [
+      {
+        "regime": "Cold (<10C)",
+        "count": 479,
+        "pct_of_test": 48.2,
+        "actual_mean_kwh": 15.14,
+        "predicted_mean_kwh": 6.54,
+        "mean_bias_kwh": -8.6,
+        "mae_kwh": 8.78,
+        "rmse_kwh": 11.38,
+        "r2": -0.465
+      },
+      {
+        "regime": "Mild (10-16C)",
+        "count": 487,
+        "pct_of_test": 49.0,
+        "actual_mean_kwh": 14.21,
+        "predicted_mean_kwh": 7.96,
+        "mean_bias_kwh": -6.26,
+        "mae_kwh": 6.58,
+        "rmse_kwh": 8.05,
+        "r2": 0.277
+      },
+      {
+        "regime": "Warm (>16C)",
+        "count": 28,
+        "pct_of_test": 2.8,
+        "actual_mean_kwh": 17.84,
+        "predicted_mean_kwh": 10.1,
+        "mean_bias_kwh": -7.74,
+        "mae_kwh": 7.82,
+        "rmse_kwh": 9.6,
+        "r2": 0.346
+      }
+    ],
+    "occupancy_state": [
+      {
+        "regime": "Occupied (1)",
+        "count": 758,
+        "pct_of_test": 76.3,
+        "actual_mean_kwh": 16.28,
+        "predicted_mean_kwh": 8.46,
+        "mean_bias_kwh": -7.81,
+        "mae_kwh": 8.07,
+        "rmse_kwh": 10.16,
+        "r2": -0.175
+      },
+      {
+        "regime": "Unoccupied (0)",
+        "count": 236,
+        "pct_of_test": 23.7,
+        "actual_mean_kwh": 9.89,
+        "predicted_mean_kwh": 3.7,
+        "mean_bias_kwh": -6.19,
+        "mae_kwh": 6.39,
+        "rmse_kwh": 8.73,
+        "r2": -0.087
+      }
+    ],
+    "working_hours": [
+      {
+        "regime": "Business Hours (08:00-17:00 M-F)",
+        "count": 321,
+        "pct_of_test": 32.3,
+        "actual_mean_kwh": 16.98,
+        "predicted_mean_kwh": 9.55,
+        "mean_bias_kwh": -7.43,
+        "mae_kwh": 7.74,
+        "rmse_kwh": 9.76,
+        "r2": -0.337
+      },
+      {
+        "regime": "Non-Business Hours (Nights/Weekends)",
+        "count": 673,
+        "pct_of_test": 67.7,
+        "actual_mean_kwh": 13.7,
+        "predicted_mean_kwh": 6.28,
+        "mean_bias_kwh": -7.42,
+        "mae_kwh": 7.64,
+        "rmse_kwh": 9.87,
+        "r2": -0.006
+      }
+    ],
+    "energy_magnitude": [
+      {
+        "regime": "Low Energy (<14.3 kWh)",
+        "count": 497,
+        "pct_of_test": 50.0,
+        "actual_mean_kwh": 6.53,
+        "predicted_mean_kwh": 3.0,
+        "mean_bias_kwh": -3.52,
+        "mae_kwh": 3.87,
+        "rmse_kwh": 4.77,
+        "r2": -0.371
+      },
+      {
+        "regime": "High Energy (>=14.3 kWh)",
+        "count": 497,
+        "pct_of_test": 50.0,
+        "actual_mean_kwh": 23.0,
+        "predicted_mean_kwh": 11.67,
+        "mean_bias_kwh": -11.33,
+        "mae_kwh": 11.48,
+        "rmse_kwh": 13.07,
+        "r2": -4.752
+      }
+    ]
+  },
+  "hvac_error_analysis": {
+    "actual_mean_kwh": 9.43,
+    "predicted_mean_kwh": 3.73,
+    "mean_bias_kwh": -5.7,
+    "mae_kwh": 6.19,
+    "rmse_kwh": 8.66,
+    "r2": -0.053,
+    "error_correlations": {
+      "outdoor_temp_c": 0.203,
+      "indoor_temp_mean": -0.122,
+      "temp_gradient_in_out": -0.24,
+      "rtu_south_fan_spd_mean": 0.141,
+      "rtu_south_damper_pct_mean": 0.187
+    }
+  },
+  "occupancy_safety": {
+    "classification_threshold_f1_optimal": 0.51,
+    "classification_threshold_validation_fnr": 0.0509,
+    "recommended_control_safety_threshold": 0.3,
+    "control_safety_threshold_validation_recall": 0.985,
+    "control_safety_threshold_validation_fnr": 0.015,
+    "control_safety_threshold_validation_f1": 0.9008,
+    "safety_curve": [
+      {
+        "threshold": 0.05,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "false_negative_rate_unsafe": 0.0,
+        "false_positive_rate_over_conservative": 1.0,
+        "precision": 0.7523,
+        "f1": 0.8586
+      },
+      {
+        "threshold": 0.1,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "false_negative_rate_unsafe": 0.0,
+        "false_positive_rate_over_conservative": 1.0,
+        "precision": 0.7523,
+        "f1": 0.8586
+      },
+      {
+        "threshold": 0.15,
+        "recall": 1.0,
+        "specificity": 0.0364,
+        "false_negative_rate_unsafe": 0.0,
+        "false_positive_rate_over_conservative": 0.9636,
+        "precision": 0.7591,
+        "f1": 0.863
+      },
+      {
+        "threshold": 0.2,
+        "recall": 0.994,
+        "specificity": 0.1545,
+        "false_negative_rate_unsafe": 0.006,
+        "false_positive_rate_over_conservative": 0.8455,
+        "precision": 0.7812,
+        "f1": 0.8748
+      },
+      {
+        "threshold": 0.25,
+        "recall": 0.9865,
+        "specificity": 0.2818,
+        "false_negative_rate_unsafe": 0.0135,
+        "false_positive_rate_over_conservative": 0.7182,
+        "precision": 0.8066,
+        "f1": 0.8875
+      },
+      {
+        "threshold": 0.3,
+        "recall": 0.985,
+        "specificity": 0.3864,
+        "false_negative_rate_unsafe": 0.015,
+        "false_positive_rate_over_conservative": 0.6136,
+        "precision": 0.8298,
+        "f1": 0.9008
+      },
+      {
+        "threshold": 0.35,
+        "recall": 0.9686,
+        "specificity": 0.5273,
+        "false_negative_rate_unsafe": 0.0314,
+        "false_positive_rate_over_conservative": 0.4727,
+        "precision": 0.8615,
+        "f1": 0.9119
+      },
+      {
+        "threshold": 0.4,
+        "recall": 0.9611,
+        "specificity": 0.5909,
+        "false_negative_rate_unsafe": 0.0389,
+        "false_positive_rate_over_conservative": 0.4091,
+        "precision": 0.877,
+        "f1": 0.9171
+      },
+      {
+        "threshold": 0.45,
+        "recall": 0.9551,
+        "specificity": 0.6864,
+        "false_negative_rate_unsafe": 0.0449,
+        "false_positive_rate_over_conservative": 0.3136,
+        "precision": 0.9024,
+        "f1": 0.928
+      },
+      {
+        "threshold": 0.5,
+        "recall": 0.9491,
+        "specificity": 0.7636,
+        "false_negative_rate_unsafe": 0.0509,
+        "false_positive_rate_over_conservative": 0.2364,
+        "precision": 0.9242,
+        "f1": 0.9365
+      },
+      {
+        "threshold": 0.55,
+        "recall": 0.9311,
+        "specificity": 0.8,
+        "false_negative_rate_unsafe": 0.0689,
+        "false_positive_rate_over_conservative": 0.2,
+        "precision": 0.9339,
+        "f1": 0.9325
+      },
+      {
+        "threshold": 0.6,
+        "recall": 0.9147,
+        "specificity": 0.8455,
+        "false_negative_rate_unsafe": 0.0853,
+        "false_positive_rate_over_conservative": 0.1545,
+        "precision": 0.9473,
+        "f1": 0.9307
+      },
+      {
+        "threshold": 0.65,
+        "recall": 0.8847,
+        "specificity": 0.8545,
+        "false_negative_rate_unsafe": 0.1153,
+        "false_positive_rate_over_conservative": 0.1455,
+        "precision": 0.9486,
+        "f1": 0.9156
+      },
+      {
+        "threshold": 0.7,
+        "recall": 0.8383,
+        "specificity": 0.8864,
+        "false_negative_rate_unsafe": 0.1617,
+        "false_positive_rate_over_conservative": 0.1136,
+        "precision": 0.9573,
+        "f1": 0.8939
+      },
+      {
+        "threshold": 0.75,
+        "recall": 0.7844,
+        "specificity": 0.9045,
+        "false_negative_rate_unsafe": 0.2156,
+        "false_positive_rate_over_conservative": 0.0955,
+        "precision": 0.9615,
+        "f1": 0.864
+      },
+      {
+        "threshold": 0.8,
+        "recall": 0.7275,
+        "specificity": 0.9591,
+        "false_negative_rate_unsafe": 0.2725,
+        "false_positive_rate_over_conservative": 0.0409,
+        "precision": 0.9818,
+        "f1": 0.8358
+      },
+      {
+        "threshold": 0.85,
+        "recall": 0.6302,
+        "specificity": 0.9955,
+        "false_negative_rate_unsafe": 0.3698,
+        "false_positive_rate_over_conservative": 0.0045,
+        "precision": 0.9976,
+        "f1": 0.7725
+      },
+      {
+        "threshold": 0.9,
+        "recall": 0.4865,
+        "specificity": 1.0,
+        "false_negative_rate_unsafe": 0.5135,
+        "false_positive_rate_over_conservative": 0.0,
+        "precision": 1.0,
+        "f1": 0.6546
+      }
+    ]
+  },
+  "control_support_audit": {
+    "rtu_south_fan_spd_mean_next_hour": {
+      "train_support": {
+        "min": 34.84,
+        "max": 98.27,
+        "mean": 77.54
+      },
+      "val_support": {
+        "min": 1.43,
+        "max": 84.16,
+        "mean": 72.14
+      },
+      "test_support": {
+        "min": 19.22,
+        "max": 87.31,
+        "mean": 67.4
+      },
+      "recommended_candidate_bounds": {
+        "min": 40.0,
+        "max": 90.0
+      }
+    },
+    "rtu_south_damper_pct_mean_next_hour": {
+      "train_support": {
+        "min": 10.0,
+        "max": 100.0,
+        "mean": 51.54
+      },
+      "val_support": {
+        "min": 0.0,
+        "max": 99.72,
+        "mean": 37.86
+      },
+      "test_support": {
+        "min": 5.0,
+        "max": 76.67,
+        "mean": 28.21
+      },
+      "recommended_candidate_bounds": {
+        "min": 10.0,
+        "max": 90.0
+      }
+    }
+  },
+  "gate_decision": {
+    "status": "READY WITH SAFEGUARDS",
+    "rationale": "The Ridge surrogate exhibits strong physical monotonicity (+2.63 on fan speed, -0.88 on damper economizer) and beats seasonal naive baselines on validation. However, severe winter seasonal distribution shift introduces a systematic negative baseline bias (-7.4 kWh total, -5.7 kWh HVAC) on the test split, causing negative test R2. Optimization is authorized to proceed strictly as a research simulation using the surrogate model with explicit validity limitations and operational safeguards: (1) bounded candidate controls [40-90% fan, 10-90% damper], (2) conservative control-safety occupancy threshold T=0.30 (FNR <= 1.5%), and (3) baseload floor clamping."
+  }
+}

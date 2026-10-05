@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "phase": "Phase 3.5 \u2014 Robustness Audit: Naive Energy Baselines",
+    "target": "south_wing_total_kwh_next_hour",
+    "generated_timestamp": "2026-10-06T01:49:04.415691"
+  },
+  "validation_split": {
+    "persistence_1h": {
+      "mae": 3.5353,
+      "rmse": 4.5704,
+      "r2": 0.6734,
+      "mape": 51.41
+    },
+    "seasonal_naive_24h": {
+      "mae": 5.2429,
+      "rmse": 7.4347,
+      "r2": 0.1359,
+      "mape": 67.56
+    },
+    "seasonal_naive_lag24h_feature": {
+      "mae": 6.022,
+      "rmse": 7.9517,
+      "r2": 0.0115,
+      "mape": 87.64
+    },
+    "ridge_champion_oracle": {
+      "mae": 5.0815,
+      "rmse": 6.2471,
+      "r2": 0.3899,
+      "mape": 84.99
+    },
+    "ridge_champion_chained": {
+      "mae": 5.0992,
+      "rmse": 6.2754,
+      "r2": 0.3843,
+      "mape": 85.42
+    }
+  },
+  "test_split": {
+    "persistence_1h": {
+      "mae": 3.4094,
+      "rmse": 4.5932,
+      "r2": 0.7681,
+      "mape": 43.3
+    },
+    "seasonal_naive_24h": {
+      "mae": 7.305,
+      "rmse": 9.8827,
+      "r2": -0.0738,
+      "mape": 131.39
+    },
+    "seasonal_naive_lag24h_feature": {
+      "mae": 7.7295,
+      "rmse": 10.2299,
+      "r2": -0.1505,
+      "mape": 138.9
+    },
+    "ridge_champion_oracle": {
+      "mae": 7.7061,
+      "rmse": 9.8759,
+      "r2": -0.0723,
+      "mape": 59.69
+    },
+    "ridge_champion_chained": {
+      "mae": 7.6733,
+      "rmse": 9.8357,
+      "r2": -0.0636,
+      "mape": 59.56
+    }
+  }
+}
