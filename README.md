@@ -41,8 +41,8 @@ Current Observations at time t (Environment, Weather, HVAC, Lags)
 | **Step 0** | Dataset Inspection & Schema Discovery | **COMPLETED** | `docs/dataset.md`, `docs/dataset_inventory.csv` |
 | **Phase 1** | Modeling Table Construction ($t \to t+1$) | **COMPLETED** | `data/processed/*.parquet`, `docs/phase1_modeling_tables.md` |
 | **Audit** | Final Pre-ML Implementation vs Spec Audit | **PASSED** | `docs/pre_ml_audit.md`, `tests/test_preprocessing.py` (9/9 passing) |
-| **Phase 2** | Exploratory Data Analysis (EDA) | **NEXT** | `notebooks/01_eda.ipynb` |
-| **Phase 3** | Model Training & Evaluation | **PENDING** | `src/occupancy_model.py`, `src/energy_model.py` |
+| **Phase 2** | Exploratory Data Analysis (EDA) | **COMPLETED** | `notebooks/01_eda.ipynb`, `docs/phase2_eda_report.md`, `docs/figures/eda/` |
+| **Phase 3** | Model Training & Evaluation | **NEXT** | `src/occupancy_model.py`, `src/energy_model.py`, `src/evaluate.py` |
 | **Phase 4** | Counterfactual Optimization & Simulation | **PENDING** | `src/optimizer.py`, `src/simulator.py` |
 | **Phase 5** | Interactive Streamlit BEMS Dashboard | **PENDING** | `dashboard/app.py` |
 

@@ -96,52 +96,40 @@ Validated Parquet tables in `data/processed/` and master specifications in `docs
 
 ------------------------------------------------------------------------
 
-# Phase 2 --- Exploratory Data Analysis `[NEXT]`
+# Phase 2 --- Exploratory Data Analysis `[COMPLETED]`
 
-Create:
+Created:
+- `notebooks/01_eda.ipynb` (37 cells, executed in-place with all rich outputs)
+- `docs/phase2_eda_report.md` (comprehensive 14-section analytical report)
+- `docs/phase2_eda_validation.md` (17-item verification checklist)
+- `docs/phase2_eda_metrics.json` (exact machine-readable metrics)
+- `docs/figures/eda/` (16 high-resolution publication figures)
 
-`notebooks/01_eda.ipynb`
-
-### Analyze
-
--   Dataset dimensions
--   Data types
--   Missing values
--   Duplicate records
--   Outliers
--   Target distributions
--   Time trends
--   Occupancy distribution
--   Energy distribution
--   Correlation matrix
--   Temperature vs energy
--   Occupancy vs energy
--   Hour vs energy
--   Weekday vs weekend consumption
-
-### Visualizations
-
-At minimum:
-
--   Energy over time
--   Occupancy over time
--   Hourly energy profile
--   Occupied vs unoccupied energy
--   Temperature vs energy
--   Correlation heatmap
--   Energy distribution
+### Completed Tasks
+- [x] All processed datasets loaded and quality verified (unique, monotonic, 0 nulls).
+- [x] Submeter additive identity verified ($\text{Total Energy} == \text{HVAC} + \text{Lighting} + \text{Plug Loads}$ within $0.000000\text{ kWh}$).
+- [x] Target distributions analyzed for all 6 targets.
+- [x] Occupancy patterns characterized (diurnal profile, weekend collapse, headcount distribution).
+- [x] Energy submeter profiles quantified (HVAC 78.60%, Plug Loads 14.22%, Lighting 7.18%).
+- [x] Occupancy vs energy sensitivity evaluated (+657.0% lighting, +108.5% plug loads, +12.6% HVAC).
+- [x] Weather and environmental thermodynamic relationships evaluated ($r = 0.691$ outdoor temp vs HVAC).
+- [x] HVAC control telemetry characterized (supply fan speed, economizer damper opening).
+- [x] Multi-scale temporal patterns analyzed (working-hour clustering, heatmaps).
+- [x] Feature correlations and 22 collinear pairs ($|r| \ge 0.85$) identified and documented.
+- [x] Chronological split timeline and seasonal distribution shift analyzed (winter temp drop).
+- [x] Zero ML models trained, zero hyperparameters tuned, zero data leakage introduced.
 
 ### Deliverable
-
-A documented EDA notebook with conclusions.
+`notebooks/01_eda.ipynb`, `docs/phase2_eda_report.md`, `docs/phase2_eda_validation.md`, and 16 figures in `docs/figures/eda/`.
 
 ------------------------------------------------------------------------
 
-# Phase 3 --- Data Preprocessing & Modeling Tables
+# Phase 3 --- Model Training & Evaluation `[NEXT]`
 
-Create reusable functions in:
-
-`src/preprocessing.py`
+Create reusable modules in:
+- `src/occupancy_model.py`
+- `src/energy_model.py`
+- `src/evaluate.py`
 
 ### Tasks
 

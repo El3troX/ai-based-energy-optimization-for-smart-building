@@ -1,0 +1,429 @@
+{
+  "overview": {
+    "occupancy": {
+      "rows": 6547,
+      "cols": 37,
+      "start": "2018-05-23 07:00:00",
+      "end": "2019-02-21 09:00:00",
+      "nulls": 0,
+      "duplicates": 0,
+      "monotonic": true
+    },
+    "energy": {
+      "rows": 5945,
+      "cols": 47,
+      "start": "2018-05-23 07:00:00",
+      "end": "2019-02-21 09:00:00",
+      "nulls": 0,
+      "duplicates": 0,
+      "monotonic": true
+    },
+    "joint": {
+      "rows": 5945,
+      "cols": 61,
+      "start": "2018-05-23 07:00:00",
+      "end": "2019-02-21 09:00:00",
+      "nulls": 0,
+      "duplicates": 0,
+      "monotonic": true
+    }
+  },
+  "targets": {
+    "occ_total_mean_next_hour": {
+      "count": 5945,
+      "mean": 11.69526913372582,
+      "std": 18.17324793564955,
+      "min": 0.0,
+      "q25": 0.0,
+      "median": 2.183333333333333,
+      "q75": 14.766666666666667,
+      "max": 96.91666666666667,
+      "skewness": 1.7149540804343941
+    },
+    "south_wing_total_kwh_next_hour": {
+      "count": 5945,
+      "mean": 25.04740447613841,
+      "std": 12.418790929888006,
+      "min": 0.91625,
+      "q25": 18.40921245325,
+      "median": 24.5,
+      "q75": 31.50983182825,
+      "max": 77.36935465,
+      "skewness": 0.2969313350268468
+    },
+    "lig_S_kwh_next_hour": {
+      "count": 5945,
+      "mean": 1.7994001701323996,
+      "std": 1.8750816845513099,
+      "min": 0.0,
+      "q25": 0.13750000175,
+      "median": 0.70625,
+      "q75": 3.88825,
+      "max": 8.618500000000001,
+      "skewness": 0.50345370878697
+    },
+    "mels_S_kwh_next_hour": {
+      "count": 5945,
+      "mean": 3.5617167484644012,
+      "std": 2.479291664151977,
+      "min": 0.8,
+      "q25": 1.875,
+      "median": 2.34233333325,
+      "q75": 4.8125,
+      "max": 12.2,
+      "skewness": 1.1894051425179275
+    },
+    "hvac_S_kwh_next_hour": {
+      "count": 5945,
+      "mean": 19.686287557541608,
+      "std": 10.854878468623552,
+      "min": 0.0,
+      "q25": 13.10885964925,
+      "median": 21.05,
+      "q75": 24.825,
+      "max": 65.62903226,
+      "skewness": 0.01496095682250685
+    },
+    "is_occupied_next_hour": {
+      "count": 5945,
+      "unoccupied_count": 1538,
+      "occupied_count": 4407,
+      "unoccupied_pct": 25.87047939444912,
+      "occupied_pct": 74.12952060555088
+    }
+  },
+  "sum_check": {
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "exact_match_tolerance_1e-5": true
+  },
+  "energy_by_occupancy": {
+    "south_wing_total_kwh_next_hour": {
+      "unoccupied_mean": 20.287913424710332,
+      "unoccupied_median": 22.8975,
+      "unoccupied_std": 9.908046721910564,
+      "occupied_mean": 26.70842041375956,
+      "occupied_median": 25.7375,
+      "occupied_std": 12.772996623091078,
+      "mean_pct_delta": 31.64695577431417
+    },
+    "lig_S_kwh_next_hour": {
+      "unoccupied_mean": 0.306506878555927,
+      "unoccupied_median": 0.15187499999999998,
+      "unoccupied_std": 0.6397253378227014,
+      "occupied_mean": 2.320405362427524,
+      "occupied_median": 2.35,
+      "occupied_std": 1.8844050954924132,
+      "mean_pct_delta": 657.0483812173663
+    },
+    "mels_S_kwh_next_hour": {
+      "unoccupied_mean": 1.9740990441681598,
+      "unoccupied_median": 1.925,
+      "unoccupied_std": 0.7050939576463887,
+      "occupied_mean": 4.115779836553265,
+      "occupied_median": 2.7763392857499998,
+      "occupied_std": 2.6329170951662744,
+      "mean_pct_delta": 108.48902433299948
+    },
+    "hvac_S_kwh_next_hour": {
+      "unoccupied_mean": 18.007307501986244,
+      "unoccupied_median": 20.747500000000002,
+      "unoccupied_std": 9.678404279551891,
+      "occupied_mean": 20.272235214778764,
+      "occupied_median": 21.2,
+      "occupied_std": 11.178311326227423,
+      "mean_pct_delta": 12.577825488583978
+    }
+  },
+  "correlations": {
+    "is_occupied_next_hour": {
+      "top_pearson": {
+        "is_occupied_lag_1h": 0.588814907194137,
+        "is_occupied_lag_2h": 0.48382497606294894,
+        "lig_S_kwh_lag_1h": 0.46466682092792677,
+        "lig_S_kwh_lag_2h": 0.4569971496756434,
+        "occ_total_mean_rolling_std_6h": 0.38428389044349665,
+        "mels_S_kwh_lag_1h": 0.3798342126094723,
+        "mels_S_kwh_lag_2h": 0.37764126879551235,
+        "occ_total_mean_rolling_mean_6h": 0.364751478206508,
+        "occ_total_mean_rolling_mean_3h": 0.35127613475502006,
+        "occ_total_mean_lag_1h": 0.34614196787402207
+      },
+      "top_spearman": {
+        "is_occupied_lag_1h": 0.5888149071941374,
+        "occ_total_mean_lag_1h": 0.5632246109857818,
+        "occ_total_mean_rolling_mean_3h": 0.5388707808469382,
+        "occ_total_mean_rolling_mean_6h": 0.516265161730754,
+        "occ_total_mean_rolling_std_6h": 0.5128560008666915,
+        "occ_total_mean_rolling_std_3h": 0.5049266481563216,
+        "occ_total_mean_lag_2h": 0.4973015738888134,
+        "is_occupied_lag_2h": 0.4838249760629477,
+        "lig_S_kwh_lag_1h": 0.4525941892348071,
+        "lig_S_kwh_lag_2h": 0.4401630215058125
+      }
+    },
+    "occ_total_mean_next_hour": {
+      "top_pearson": {
+        "occ_total_mean_lag_1h": 0.7483235854015843,
+        "mels_S_kwh_lag_1h": 0.6572075131304708,
+        "lig_S_kwh_lag_1h": 0.6535512746083205,
+        "occ_total_mean_rolling_mean_3h": 0.627905442874652,
+        "lig_S_kwh_lag_2h": 0.5919862138684081,
+        "occ_total_mean_lag_2h": 0.5883092432545023,
+        "occ_total_mean_lag_24h": 0.5562885986352104,
+        "mels_S_kwh_lag_24h": 0.5320607906131265,
+        "mels_S_kwh_lag_2h": 0.5283290718516495,
+        "occ_total_mean_rolling_std_3h": 0.5273258647620244
+      },
+      "top_spearman": {
+        "occ_total_mean_lag_1h": 0.7926466417768888,
+        "occ_total_mean_rolling_mean_3h": 0.7103642406865631,
+        "occ_total_mean_lag_2h": 0.6665628999502196,
+        "lig_S_kwh_lag_1h": 0.6611681079424918,
+        "occ_total_mean_rolling_std_3h": 0.6526558362741307,
+        "mels_S_kwh_lag_1h": 0.637564319640785,
+        "occ_total_mean_rolling_std_6h": 0.6350313295611568,
+        "occ_total_mean_rolling_mean_6h": 0.6233989070369929,
+        "lig_S_kwh_lag_2h": 0.6105479111466251,
+        "is_occupied_lag_1h": 0.588637356974776
+      }
+    },
+    "south_wing_total_kwh_next_hour": {
+      "top_pearson": {
+        "south_wing_total_kwh_lag_1h": 0.8825611849524123,
+        "south_wing_total_kwh_rolling_mean_3h": 0.8478742762347133,
+        "south_wing_total_kwh_lag_2h": 0.8216097804538693,
+        "hvac_S_kwh_lag_1h": 0.818036407491642,
+        "south_wing_total_kwh_rolling_mean_6h": 0.7755694414623673,
+        "hvac_S_kwh_lag_2h": 0.7636219595832695,
+        "south_wing_total_kwh_rolling_mean_24h": 0.7260687854654647,
+        "south_wing_total_kwh_lag_24h": 0.697508693857534,
+        "hvac_S_kwh_lag_24h": 0.6594303779749061,
+        "outdoor_temp_c": 0.6405404606752384
+      },
+      "top_spearman": {
+        "south_wing_total_kwh_lag_1h": 0.8773701402349998,
+        "south_wing_total_kwh_rolling_mean_3h": 0.8456323479462946,
+        "south_wing_total_kwh_lag_2h": 0.8218847995896843,
+        "hvac_S_kwh_lag_1h": 0.8082851099901758,
+        "south_wing_total_kwh_rolling_mean_6h": 0.7786293300293718,
+        "hvac_S_kwh_lag_2h": 0.7621476254522335,
+        "south_wing_total_kwh_rolling_mean_24h": 0.7289250169287471,
+        "south_wing_total_kwh_lag_24h": 0.7173527608583463,
+        "hvac_S_kwh_lag_24h": 0.6779598397056686,
+        "outdoor_temp_c": 0.6366953985492825
+      }
+    }
+  },
+  "redundant_pairs": [
+    {
+      "feature_1": "temp_gradient_in_out",
+      "feature_2": "outdoor_temp_c",
+      "pearson_r": -0.9900084264436463,
+      "spearman_r": -0.9861770315862194
+    },
+    {
+      "feature_1": "occ_total_mean_lag_2h",
+      "feature_2": "occ_total_mean_rolling_mean_3h",
+      "pearson_r": 0.9882176576450004,
+      "spearman_r": 0.974411528173606
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_2h",
+      "feature_2": "south_wing_total_kwh_rolling_mean_3h",
+      "pearson_r": 0.9782152683301727,
+      "spearman_r": 0.9742814019682028
+    },
+    {
+      "feature_1": "south_wing_total_kwh_rolling_mean_3h",
+      "feature_2": "south_wing_total_kwh_rolling_mean_6h",
+      "pearson_r": 0.9674236580131971,
+      "spearman_r": 0.9632432674578191
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_1h",
+      "feature_2": "south_wing_total_kwh_rolling_mean_3h",
+      "pearson_r": 0.9645693631865597,
+      "spearman_r": 0.9603531032172065
+    },
+    {
+      "feature_1": "mels_S_kwh_lag_1h",
+      "feature_2": "mels_S_kwh_lag_2h",
+      "pearson_r": 0.9506497464227511,
+      "spearman_r": 0.9545980844212905
+    },
+    {
+      "feature_1": "rtu_south_fan_spd_mean",
+      "feature_2": "rtu_south_fan_spd_mean_next_hour",
+      "pearson_r": 0.9462179370718578,
+      "spearman_r": 0.9091633313117873
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_1h",
+      "feature_2": "hvac_S_kwh_lag_1h",
+      "pearson_r": 0.9449895529701093,
+      "spearman_r": 0.9250662191351655
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_2h",
+      "feature_2": "hvac_S_kwh_lag_2h",
+      "pearson_r": 0.944909178140052,
+      "spearman_r": 0.9248653438690012
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_24h",
+      "feature_2": "hvac_S_kwh_lag_24h",
+      "pearson_r": 0.9446407980278378,
+      "spearman_r": 0.9236585994799605
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_2h",
+      "feature_2": "south_wing_total_kwh_rolling_mean_6h",
+      "pearson_r": 0.9437800703705693,
+      "spearman_r": 0.9373947437143727
+    },
+    {
+      "feature_1": "occ_total_mean_lag_1h",
+      "feature_2": "occ_total_mean_rolling_mean_3h",
+      "pearson_r": 0.9319893230183615,
+      "spearman_r": 0.9267012181931187
+    },
+    {
+      "feature_1": "lig_S_kwh_lag_1h",
+      "feature_2": "lig_S_kwh_lag_2h",
+      "pearson_r": 0.9288980256026295,
+      "spearman_r": 0.8973632099942919
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_1h",
+      "feature_2": "south_wing_total_kwh_lag_2h",
+      "pearson_r": 0.9220472940144641,
+      "spearman_r": 0.9160300903577472
+    },
+    {
+      "feature_1": "hvac_S_kwh_lag_2h",
+      "feature_2": "south_wing_total_kwh_rolling_mean_3h",
+      "pearson_r": 0.9183759374697938,
+      "spearman_r": 0.8970667372546335
+    },
+    {
+      "feature_1": "occ_total_mean_rolling_mean_24h",
+      "feature_2": "occ_total_mean_rolling_std_24h",
+      "pearson_r": 0.9169897748265675,
+      "spearman_r": 0.9307759692255017
+    },
+    {
+      "feature_1": "hvac_S_kwh_lag_1h",
+      "feature_2": "south_wing_total_kwh_rolling_mean_3h",
+      "pearson_r": 0.9162033541256438,
+      "spearman_r": 0.8959364559689745
+    },
+    {
+      "feature_1": "rtu_south_damper_pct_mean",
+      "feature_2": "rtu_south_damper_pct_mean_next_hour",
+      "pearson_r": 0.9150793064407101,
+      "spearman_r": 0.8578634842269436
+    },
+    {
+      "feature_1": "occ_total_mean_rolling_mean_3h",
+      "feature_2": "occ_total_mean_rolling_mean_6h",
+      "pearson_r": 0.9120539760579821,
+      "spearman_r": 0.9294809206037411
+    },
+    {
+      "feature_1": "occ_total_mean_lag_1h",
+      "feature_2": "occ_total_mean_lag_2h",
+      "pearson_r": 0.9094066602538621,
+      "spearman_r": 0.9164734946942368
+    },
+    {
+      "feature_1": "hvac_S_kwh_lag_1h",
+      "feature_2": "hvac_S_kwh_lag_2h",
+      "pearson_r": 0.9076611828808688,
+      "spearman_r": 0.8931970414658224
+    },
+    {
+      "feature_1": "hvac_S_kwh_lag_2h",
+      "feature_2": "south_wing_total_kwh_rolling_mean_6h",
+      "pearson_r": 0.9050993072182633,
+      "spearman_r": 0.884130660954422
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_1h",
+      "feature_2": "south_wing_total_kwh_rolling_mean_6h",
+      "pearson_r": 0.9035688061411428,
+      "spearman_r": 0.8990911800293285
+    },
+    {
+      "feature_1": "occ_total_mean_lag_2h",
+      "feature_2": "occ_total_mean_rolling_mean_6h",
+      "pearson_r": 0.8863769304316574,
+      "spearman_r": 0.8911215757861353
+    },
+    {
+      "feature_1": "hvac_S_kwh_lag_1h",
+      "feature_2": "south_wing_total_kwh_rolling_mean_6h",
+      "pearson_r": 0.8823042807623367,
+      "spearman_r": 0.8650399255326381
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_2h",
+      "feature_2": "hvac_S_kwh_lag_1h",
+      "pearson_r": 0.8709058475813455,
+      "spearman_r": 0.8499020415629659
+    },
+    {
+      "feature_1": "south_wing_total_kwh_lag_1h",
+      "feature_2": "hvac_S_kwh_lag_2h",
+      "pearson_r": 0.8543457521891497,
+      "spearman_r": 0.8358587343051853
+    }
+  ],
+  "splits": {
+    "train": {
+      "rows": 4063,
+      "pct": 68.34314550042052,
+      "start": "2018-05-23 07:00:00",
+      "end": "2018-11-30 23:00:00",
+      "occ_mean": 12.61236360653048,
+      "occ_rate_pct": 73.3694314545902,
+      "energy_mean": 30.22276903858301,
+      "outdoor_temp_mean": 15.456746861924685,
+      "indoor_temp_mean": 23.209079819126373,
+      "solar_radiation_mean": 229.5769053039626,
+      "hvac_mean": 24.680798734505967,
+      "lighting_mean": 1.7448399783222415,
+      "plug_load_mean": 3.797130325754807
+    },
+    "val": {
+      "rows": 888,
+      "pct": 14.936921783010934,
+      "start": "2018-12-01 00:00:00",
+      "end": "2019-01-10 23:00:00",
+      "occ_mean": 8.170561186186188,
+      "occ_rate_pct": 75.22522522522522,
+      "energy_mean": 12.882383297191797,
+      "outdoor_temp_mean": 10.35882882882883,
+      "indoor_temp_mean": 22.332741565507238,
+      "solar_radiation_mean": 84.25144003378378,
+      "hvac_mean": 8.320090151953973,
+      "lighting_mean": 1.4979569334376108,
+      "plug_load_mean": 3.0643362118002115
+    },
+    "test": {
+      "rows": 994,
+      "pct": 16.719932716568543,
+      "start": "2019-01-11 00:00:00",
+      "end": "2019-02-21 09:00:00",
+      "occ_mean": 11.095456069751846,
+      "occ_rate_pct": 76.25754527162978,
+      "energy_mean": 14.760716940617456,
+      "outdoor_temp_mean": 9.874029175050302,
+      "indoor_temp_mean": 23.390701679530455,
+      "solar_radiation_mean": 93.20841926559356,
+      "hvac_mean": 9.425205449046276,
+      "lighting_mean": 2.2917137048503524,
+      "plug_load_mean": 3.043797786720825
+    }
+  }
+}
