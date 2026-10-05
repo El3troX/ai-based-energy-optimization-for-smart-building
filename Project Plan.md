@@ -181,21 +181,44 @@ Created:
 
 ------------------------------------------------------------------------
 
-# Phase 4 --- Counterfactual Optimization & Simulation `[NEXT]`
+# Phase 4 --- Counterfactual Optimization & Simulation `[COMPLETED]`
 
-Create:
-- `src/optimizer.py`
-- `src/simulator.py`
-- `notebooks/04_optimization_simulation.ipynb`
+### Tasks
+- [x] Create centralized configuration `src/config.py` with economic tariffs, emissions, control bounds, and thresholds.
+- [x] Implement BEMS counterfactual optimization engine `src/optimizer.py` with candidate search, occupancy safety gating ($T_{\text{safety}}=0.30$), actuator ramp constraints ($|\Delta u| \le 15\%/\text{h}$), and comfort bounds.
+- [x] Implement building operational simulator `src/simulator.py` evaluating the chronological test partition (`2019-01-11` to `2019-02-21`, 994 hours).
+- [x] Benchmark 4 experimental scenarios (Baseline, HVAC-only, HVAC + Lighting, Full Safeguarded Optimizer).
+- [x] Conduct 4 ablation studies (Safety Gate $T=0.51$ vs $T=0.30$, Ramp Limits enabled vs disabled).
+- [x] Decompose results across operational regimes (Occupied vs Unoccupied, Cold $<10^\circ\text{C}$ vs Mild $10-16^\circ\text{C}$ vs Warm $>16^\circ\text{C}$).
+- [x] Generate 12 publication-quality diagnostic plots in `docs/figures/optimization/`.
+- [x] Export machine-readable results registry `docs/phase4_results.json`.
+- [x] Compile master report `docs/phase4_optimization_simulation.md` and validation checklist `docs/phase4_validation.md`.
+- [x] Build and execute Jupyter notebook `notebooks/04_optimization_simulation.ipynb` across all 17 sections.
+- [x] Create automated test suite `tests/test_optimization.py` (10 unit tests; 32/32 project tests passing).
 
-### Objectives
-- Perform model-based counterfactual scenario search over candidate HVAC setpoints (`rtu_south_fan_spd_mean_next_hour`, `rtu_south_damper_pct_mean_next_hour`) and lighting controls within audited support bounds ($[40\%, 90\%]$ fan, $[10\%, 90\%]$ damper).
-- Enforce operational and comfort constraints (ASHRAE Standard 55 thermal comfort bounds) and control-safety occupancy threshold ($T_{\text{safety}} = 0.30$).
-- Simulate before/after energy and cost savings across the test partition under surrogate validity safeguards.
+### Key Results Summary
+- **Optimization Activity:**
+  - Hours Evaluated: **994**
+  - Hours Optimized: **804** ($80.89\%$)
+  - Hours NO_CHANGE (Baseline Preserved): **190** ($19.11\%$)
+- **Estimated Model-Predicted Savings:**
+  - Cumulative Energy Savings: **$5,120.45\text{ kWh}$** ($53.32\%$ of display baseload)
+  - Mean Delta per Optimized Hour: **$-6.37\text{ kWh}$** (Median: **$-6.58\text{ kWh}$**)
+  - Cumulative Utility Cost Savings: **$\$1,126.50$** (at $\$0.22/\text{kWh}$)
+  - Cumulative Carbon Reduction: **$1,075.29\text{ kg CO}_2$** (at $0.210\text{ kg CO}_2/\text{kWh}$)
+- **Ablation Findings:**
+  - Control Safety Gate ($T_{\text{safety}}=0.30$ vs $T_{\text{class}}=0.51$): Reduced unsafe setback decisions during actual occupancy from 51 hours down to 14 hours (**$72.55\%$ safety violation reduction**).
+  - Ramp Rate Protection ($15\%/\text{h}$): Bounded unconstrained mathematical jumps (preventing an unphysical $11,125\text{ kWh}$ surge).
+- **Deliverables:**
+  - `src/config.py`, `src/optimizer.py`, `src/simulator.py`
+  - `notebooks/04_optimization_simulation.ipynb`
+  - `docs/figures/optimization/` (12 publication plots)
+  - `docs/phase4_results.json`, `docs/phase4_optimization_simulation.md`, `docs/phase4_validation.md`
+  - `tests/test_optimization.py` (10/10 passing)
 
 ------------------------------------------------------------------------
 
-# Phase 8 --- Optimization Engine
+# Phase 5 --- Interactive Streamlit BEMS Dashboard `[NEXT]`
 
 Create:
 

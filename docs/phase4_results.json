@@ -1,0 +1,195 @@
+{
+  "metadata": {
+    "phase": "Phase 4 \u2014 Counterfactual Optimization & Simulation",
+    "status": "COMPLETED",
+    "modeling_mode": "Model-Based Research Simulation using Empirical Ridge Surrogate",
+    "disclaimer": "Model-predicted savings are counterfactual estimates from a linear surrogate under explicit validity bounds, NOT experimentally verified physical control."
+  },
+  "configuration": {
+    "electricity_tariff_usd_per_kwh": 0.22,
+    "tariff_source": "California Commercial Average / PG&E Commercial Schedule B-19",
+    "emission_factor_kg_co2_per_kwh": 0.21,
+    "emission_source": "EPA eGRID Subregion CAMX (WECC California)",
+    "control_bounds": {
+      "rtu_south_fan_spd_mean_next_hour": {
+        "min": 40.0,
+        "max": 90.0,
+        "desc": "RTU South Supply Fan VFD Speed (%)"
+      },
+      "rtu_south_damper_pct_mean_next_hour": {
+        "min": 10.0,
+        "max": 90.0,
+        "desc": "RTU South Outdoor Air Damper Position (%)"
+      }
+    },
+    "ramp_limits": {
+      "fan_speed_max_delta": 15.0,
+      "damper_pct_max_delta": 30.0
+    },
+    "occupancy_thresholds": {
+      "classification_f1_optimal_t_class": 0.51,
+      "control_safety_gating_t_safety": 0.3
+    },
+    "baseload_energy_floor_kwh": 6.5,
+    "min_improvement_epsilon_kwh": 0.2
+  },
+  "scenarios": {
+    "Scenario A (Baseline)": {
+      "hours_evaluated": 994,
+      "hours_optimized": 0,
+      "hours_no_change": 994,
+      "pct_hours_improved": 0.0,
+      "total_estimated_energy_savings_kwh": 0.0,
+      "mean_delta_per_optimized_hour_kwh": 0.0,
+      "median_delta_per_optimized_hour_kwh": 0.0,
+      "overall_estimated_energy_savings_pct": 0.0,
+      "total_estimated_cost_savings_usd": 0.0,
+      "total_estimated_co2_reduction_kg": 0.0
+    },
+    "Scenario B (HVAC-Only)": {
+      "hours_evaluated": 994,
+      "hours_optimized": 804,
+      "hours_no_change": 190,
+      "pct_hours_improved": 80.89,
+      "total_estimated_energy_savings_kwh": 5120.45,
+      "mean_delta_per_optimized_hour_kwh": -6.3687,
+      "median_delta_per_optimized_hour_kwh": -6.5792,
+      "overall_estimated_energy_savings_pct": 53.32,
+      "total_estimated_cost_savings_usd": 1126.5,
+      "total_estimated_co2_reduction_kg": 1075.29
+    },
+    "Scenario C (HVAC + Lighting)": {
+      "hours_evaluated": 994,
+      "hours_optimized": 804,
+      "hours_no_change": 190,
+      "pct_hours_improved": 80.89,
+      "total_estimated_energy_savings_kwh": 5120.45,
+      "mean_delta_per_optimized_hour_kwh": -6.3687,
+      "median_delta_per_optimized_hour_kwh": -6.5792,
+      "overall_estimated_energy_savings_pct": 53.32,
+      "total_estimated_cost_savings_usd": 1126.5,
+      "total_estimated_co2_reduction_kg": 1075.29
+    },
+    "Scenario D (Full Safeguarded)": {
+      "hours_evaluated": 994,
+      "hours_optimized": 804,
+      "hours_no_change": 190,
+      "pct_hours_improved": 80.89,
+      "total_estimated_energy_savings_kwh": 5120.45,
+      "mean_delta_per_optimized_hour_kwh": -6.3687,
+      "median_delta_per_optimized_hour_kwh": -6.5792,
+      "overall_estimated_energy_savings_pct": 53.32,
+      "total_estimated_cost_savings_usd": 1126.5,
+      "total_estimated_co2_reduction_kg": 1075.29
+    }
+  },
+  "ablations": {
+    "Ablation A (T=0.51, No Safety Gate)": {
+      "hours_evaluated": 994,
+      "hours_optimized": 799,
+      "hours_no_change": 195,
+      "pct_hours_improved": 80.38,
+      "total_estimated_energy_savings_kwh": 5092.44,
+      "mean_delta_per_optimized_hour_kwh": -6.3735,
+      "median_delta_per_optimized_hour_kwh": -6.5749,
+      "overall_estimated_energy_savings_pct": 53.03,
+      "total_estimated_cost_savings_usd": 1120.34,
+      "total_estimated_co2_reduction_kg": 1069.41
+    },
+    "Ablation B (T=0.30, With Safety Gate)": {
+      "hours_evaluated": 994,
+      "hours_optimized": 804,
+      "hours_no_change": 190,
+      "pct_hours_improved": 80.89,
+      "total_estimated_energy_savings_kwh": 5120.45,
+      "mean_delta_per_optimized_hour_kwh": -6.3687,
+      "median_delta_per_optimized_hour_kwh": -6.5792,
+      "overall_estimated_energy_savings_pct": 53.32,
+      "total_estimated_cost_savings_usd": 1126.5,
+      "total_estimated_co2_reduction_kg": 1075.29
+    },
+    "Ablation C (No Ramp Protection)": {
+      "hours_evaluated": 994,
+      "hours_optimized": 935,
+      "hours_no_change": 59,
+      "pct_hours_improved": 94.06,
+      "total_estimated_energy_savings_kwh": 11125.39,
+      "mean_delta_per_optimized_hour_kwh": -11.8988,
+      "median_delta_per_optimized_hour_kwh": -12.1359,
+      "overall_estimated_energy_savings_pct": 115.86,
+      "total_estimated_cost_savings_usd": 2447.59,
+      "total_estimated_co2_reduction_kg": 2336.33
+    },
+    "Ablation D (With Ramp Protection)": {
+      "hours_evaluated": 994,
+      "hours_optimized": 804,
+      "hours_no_change": 190,
+      "pct_hours_improved": 80.89,
+      "total_estimated_energy_savings_kwh": 5120.45,
+      "mean_delta_per_optimized_hour_kwh": -6.3687,
+      "median_delta_per_optimized_hour_kwh": -6.5792,
+      "overall_estimated_energy_savings_pct": 53.32,
+      "total_estimated_cost_savings_usd": 1126.5,
+      "total_estimated_co2_reduction_kg": 1075.29
+    }
+  },
+  "ablation_safety_audit": {
+    "unsafe_hours_without_safety_gate_t051": 51,
+    "unsafe_hours_with_safety_gate_t030": 14,
+    "safety_violation_reduction_pct": 72.55
+  },
+  "regime_breakdown": {
+    "occupancy_occupied": {
+      "regime": "Occupied",
+      "hours": 758,
+      "hours_optimized": 621,
+      "savings_kwh": 4024.46,
+      "cost_savings_usd": 885.38,
+      "co2_reduction_kg": 845.14
+    },
+    "occupancy_unoccupied": {
+      "regime": "Unoccupied",
+      "hours": 236,
+      "hours_optimized": 183,
+      "savings_kwh": 1095.99,
+      "cost_savings_usd": 241.12,
+      "co2_reduction_kg": 230.16
+    },
+    "temp_cold": {
+      "regime": "Cold (<10C)",
+      "hours": 479,
+      "hours_optimized": 344,
+      "savings_kwh": 2198.42,
+      "cost_savings_usd": 483.65,
+      "co2_reduction_kg": 461.67
+    },
+    "temp_mild": {
+      "regime": "Mild (10-16C)",
+      "hours": 487,
+      "hours_optimized": 437,
+      "savings_kwh": 2769.05,
+      "cost_savings_usd": 609.19,
+      "co2_reduction_kg": 581.5
+    },
+    "temp_warm": {
+      "regime": "Warm (>16C)",
+      "hours": 28,
+      "hours_optimized": 23,
+      "savings_kwh": 152.98,
+      "cost_savings_usd": 33.66,
+      "co2_reduction_kg": 32.13
+    }
+  },
+  "overall_simulation_metrics": {
+    "hours_evaluated": 994,
+    "hours_optimized": 804,
+    "hours_no_change": 190,
+    "pct_hours_improved": 80.89,
+    "total_estimated_energy_savings_kwh": 5120.45,
+    "mean_delta_per_optimized_hour_kwh": -6.3687,
+    "median_delta_per_optimized_hour_kwh": -6.5792,
+    "overall_estimated_energy_savings_pct": 53.32,
+    "total_estimated_cost_savings_usd": 1126.5,
+    "total_estimated_co2_reduction_kg": 1075.29
+  }
+}

@@ -44,8 +44,8 @@ Current Observations at time t (Environment, Weather, HVAC, Lags)
 | **Phase 2** | Exploratory Data Analysis (EDA) | **COMPLETED** | `notebooks/01_eda.ipynb`, `docs/phase2_eda_report.md`, `docs/figures/eda/` |
 | **Phase 3** | Model Training & Evaluation | **COMPLETED** | `src/occupancy_model.py`, `src/energy_model.py`, `docs/phase3_model_training.md` |
 | **Phase 3.5**| Robustness & Readiness Audit | **COMPLETED** | `src/robustness.py`, `docs/phase3_robustness_audit.md`, `docs/phase3_baselines.json` |
-| **Phase 4** | Counterfactual Optimization & Simulation | **NEXT** | `src/optimizer.py`, `src/simulator.py` |
-| **Phase 5** | Interactive Streamlit BEMS Dashboard | **PENDING** | `dashboard/app.py` |
+| **Phase 4** | Counterfactual Optimization & Simulation | **COMPLETED** | `src/optimizer.py`, `src/simulator.py`, `notebooks/04_optimization_simulation.ipynb` |
+| **Phase 5** | Interactive Streamlit BEMS Dashboard | **NEXT** | `dashboard/app.py` |
 
 ---
 
@@ -71,6 +71,7 @@ ai-based-energy-optimization-for-smart-building/
 │
 ├── src/                   # Production modular pipeline code
 │   ├── __init__.py
+│   ├── config.py          # Centralized tariffs, bounds, thresholds & rules
 │   ├── preprocessing.py   # Leakage-free cleaning and transformation
 │   ├── features.py        # Temporal, lag, and environmental features
 │   ├── occupancy_model.py # Occupancy prediction models
@@ -83,7 +84,7 @@ ai-based-energy-optimization-for-smart-building/
 ├── models/                # Serialized model artifacts and scalers
 ├── dashboard/             # Interactive Streamlit BEMS dashboard
 ├── docs/                  # Detailed data dictionary, audits, and reports
-├── tests/                 # Automated unit and integration tests (22 passing)
+├── tests/                 # Automated unit and integration tests (32 passing)
 ├── Context.md             # Project specification & guidelines
 ├── Project Plan.md        # Step-by-step development roadmap
 ├── requirements.txt       # Project dependencies
