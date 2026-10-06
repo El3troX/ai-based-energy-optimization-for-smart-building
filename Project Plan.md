@@ -552,27 +552,27 @@ because they are separate components of the system.
 
 ------------------------------------------------------------------------
 
-# Definition of Done
+# Definition of Done `[100% COMPLETED]`
 
 The project is complete when:
 
--   [ ] Dataset is documented.
--   [ ] EDA is complete.
--   [ ] Preprocessing is reproducible.
--   [ ] Feature engineering is implemented.
--   [ ] Occupancy model is trained and evaluated.
--   [ ] Energy model is trained and evaluated.
--   [ ] Multiple models are compared.
--   [ ] Best models are selected based on actual results.
--   [ ] Models are saved and reloadable.
--   [ ] Optimization engine is implemented.
--   [ ] Baseline vs optimized simulation works.
--   [ ] Energy/cost/CO2 savings are calculated.
--   [ ] Streamlit dashboard works.
--   [ ] Tests exist for critical components.
--   [ ] README is complete.
--   [ ] No fabricated results exist.
--   [ ] Project can be explained clearly in a viva.
+-   [x] Dataset is documented (`docs/dataset.md`).
+-   [x] EDA is complete (`docs/phase2_eda_report.md`).
+-   [x] Preprocessing is reproducible (`src/preprocessing.py`).
+-   [x] Feature engineering is implemented (`src/features.py`).
+-   [x] Occupancy model is trained and evaluated (`src/occupancy_model.py`, RF champion F1=0.9419).
+-   [x] Energy model is trained and evaluated (`src/energy_model.py`, Ridge champion RMSE=9.84).
+-   [x] Multiple models are compared (10 candidate models audited across validation and test).
+-   [x] Best models are selected based on actual results.
+-   [x] Models are saved and reloadable (`models/occupancy/`, `models/energy/`).
+-   [x] Optimization engine is implemented (`src/optimizer.py`).
+-   [x] Baseline vs optimized simulation works (`src/simulator.py`, 994 test hours).
+-   [x] Energy/cost/CO2 savings are calculated (5,120.45 kWh, $1,126.50, 1,075.29 kg CO₂).
+-   [x] Streamlit dashboard works (`dashboard/app.py`, 8 pages).
+-   [x] Tests exist for critical components (`tests/`, 41 passing tests).
+-   [x] README is complete (`README.md`).
+-   [x] No fabricated results exist (all metrics from frozen executions).
+-   [x] Project can be explained clearly in a viva.
 
 ------------------------------------------------------------------------
 

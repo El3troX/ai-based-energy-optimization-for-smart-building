@@ -45,7 +45,7 @@ Current Observations at time t (Environment, Weather, HVAC, Lags)
 | **Phase 3** | Model Training & Evaluation | **COMPLETED** | `src/occupancy_model.py`, `src/energy_model.py`, `docs/phase3_model_training.md` |
 | **Phase 3.5**| Robustness & Readiness Audit | **COMPLETED** | `src/robustness.py`, `docs/phase3_robustness_audit.md`, `docs/phase3_baselines.json` |
 | **Phase 4** | Counterfactual Optimization & Simulation | **COMPLETED** | `src/optimizer.py`, `src/simulator.py`, `notebooks/04_optimization_simulation.ipynb` |
-| **Phase 5** | Interactive Streamlit BEMS Dashboard | **NEXT** | `dashboard/app.py` |
+| **Phase 5** | Interactive Streamlit BEMS Dashboard | **COMPLETED** | `dashboard/app.py`, `dashboard/utils.py`, `docs/phase5_dashboard.md` |
 
 ---
 
@@ -82,14 +82,43 @@ ai-based-energy-optimization-for-smart-building/
 │   └── evaluation.py      # Standardized evaluation metrics
 │
 ├── models/                # Serialized model artifacts and scalers
-├── dashboard/             # Interactive Streamlit BEMS dashboard
-├── docs/                  # Detailed data dictionary, audits, and reports
-├── tests/                 # Automated unit and integration tests (32 passing)
+├── dashboard/             # Interactive Streamlit BEMS dashboard (8 pages)
+│   ├── app.py             # Main Streamlit web application
+│   ├── utils.py           # Cached data loaders and scenario optimizer
+│   └── generate_figures.py # Static documentation visual generator
+├── docs/                  # Detailed data dictionary, audits, and phase reports
+│   └── figures/dashboard/ # High-resolution UI figures for all 8 views
+├── tests/                 # Automated unit and integration tests (41 passing)
 ├── Context.md             # Project specification & guidelines
-├── Project Plan.md        # Step-by-step development roadmap
+├── Project Plan.md        # Step-by-step development roadmap (100% COMPLETE)
 ├── requirements.txt       # Project dependencies
 └── README.md
 ```
+
+---
+
+## 🖥️ Launching the Interactive BEMS Dashboard
+
+To explore the interactive research simulation dashboard locally:
+
+```bash
+streamlit run dashboard/app.py
+```
+
+The application will launch automatically in your browser at `http://localhost:8501`.
+
+### Dashboard Views:
+1. **📊 Executive Overview:** Instantaneous BEMS telemetry, occupancy safety gating, and 10-day trajectory preview.
+2. **🎛️ Live Scenario Simulator:** Pick historical test timestamps, adjust what-if overrides, and run the optimizer in $<1\text{ ms}$.
+3. **⚡ Energy Analytics:** Coordinated charts comparing actual energy, model baseline display, and counterfactual optimized predictions.
+4. **👥 Occupancy Analytics:** Forecast probabilities, dual thresholds ($T_{\text{class}}=0.51$, $T_{\text{safety}}=0.30$), diurnal curves, and weekly heatmaps.
+5. **🧠 ML Model Performance:** Benchmark registry comparing all 10 candidate architectures and baseline models.
+6. **🎯 Optimization Analysis:** Phase 4 aggregate KPIs, regime breakdowns, and safeguard ablation studies.
+7. **🛡️ Safety & Validity:** Equipment safety bounds, ramp rate limits, the four operational states, and domain boundaries.
+8. **📖 About & Methodology:** Mathematical formulations, tariff/carbon factors, and research citations.
+
+![Executive Overview](docs/figures/dashboard/01_executive_overview.png)
+![Scenario Simulator](docs/figures/dashboard/02_scenario_optimizer.png)
 
 ---
 
@@ -115,10 +144,17 @@ ai-based-energy-optimization-for-smart-building/
    pip install -r requirements.txt
    ```
 
+4. **Run automated test suite (41 tests):**
+   ```bash
+   pytest -v
+   ```
+
 ---
 
-## 🔬 Academic Standards & Methodology
+## 🔬 Academic Research Simulation Standards & Language
 
 - **Time-Series Integrity:** Strict chronological splits (no random shuffling that leaks future observations into past states).
 - **Leakage Prevention:** Feature transformations, encoders, and scalers are fitted exclusively on training sets.
-- **Empirical Rigor:** All reported performance metrics (MAE, RMSE, R², F1, Accuracy) and calculated savings are derived strictly from reproducible experiments on actual data.
+- **Empirical Rigor:** All reported performance metrics and counterfactual estimates are derived strictly from reproducible experiments on actual data.
+- **Counterfactual Reporting Language:** The safeguarded counterfactual policy produced an estimated **53.32% reduction ($5,120.45\text{ kWh}$)** in model-predicted baseline-display energy in the test-period research simulation. Estimated counterfactual $\text{CO}_2$ reduction is **$1,075.29\text{ kg}$** under the California commercial emission factor ($0.210\text{ kg CO}_2/\text{kWh}$). All savings are model-based counterfactual estimates under local linear surrogate approximations, **NOT** experimentally verified physical control.
+
