@@ -14,7 +14,7 @@
   <a href="https://github.com/El3troX/ai-based-energy-optimization-for-smart-building/actions"><img src="https://img.shields.io/badge/Tests-41%20Passed-10b981?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests Passing" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.11+-38bdf8?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+" /></a>
   <a href="https://streamlit.io/"><img src="https://img.shields.io/badge/Streamlit-1.60-ff4b4b?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit 1.60" /></a>
-  <a href="https://scikit-learn.org/"><img src="https://img.shields.io/badge/scikit--learn-1.6-f59e0b?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="Scikit-Learn" /></a>
+  <a href="https://scikit-learn.org/"><img src="https://img.shields.io/badge/scikit--learn-1.3+-f59e0b?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="Scikit-Learn 1.3+" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge" alt="MIT License" /></a>
 </p>
 
@@ -244,11 +244,11 @@ ai-based-energy-optimization-for-smart-building/
 │   ├── dataset.md                  # Comprehensive schema and physical sensor metadata
 │   ├── phase3_model_training.md    # Model training and benchmark report
 │   ├── phase3_robustness_audit.md  # Robustness audit and regime analysis
-│   ├── phase4_simulation.md        # Counterfactual optimization simulation report
+│   ├── phase4_optimization_simulation.md # Counterfactual optimization simulation report
 │   └── phase5_dashboard.md         # Full dashboard architecture documentation
 ├── models/
-│   ├── occupancy/                  # Champion Random Forest (joblib, scaler, metadata)
-│   └── energy/                     # Champion Ridge surrogate (joblib, scaler, metadata)
+│   ├── occupancy/                  # Champion Random Forest (occupancy_classifier.joblib, metadata)
+│   └── energy/                     # Champion Ridge surrogate (energy_regressor.joblib, scaler, metadata)
 ├── notebooks/                      # Exploratory Data Analysis & simulation notebooks
 ├── src/
 │   ├── config.py                   # Centralized tariffs, bounds, ramps & thresholds
