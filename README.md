@@ -1,7 +1,6 @@
 <p align="center">
   <img src="docs/figures/banner.png" alt="Building 59 BEMS Banner" width="100%" />
 </p>
-<!-- 💡 Pro-tip: If you don't have a banner yet, you can create a sleek 1280x400 header using canva.com -->
 
 <h1 align="center">🏢 AI-Based Energy Optimization for Smart Buildings</h1>
 
@@ -11,35 +10,37 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/El3troX/ai-based-energy-optimization-for-smart-building/actions"><img src="https://img.shields.io/badge/Tests-41%20Passed-10b981?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests Passing" /></a>
+  <a href="https://github.com/El3troX/ai-based-energy-optimization-for-smart-building/actions"><img src="https://img.shields.io/badge/Tests-67%20Passed-10b981?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests Passing" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.11+-38bdf8?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+" /></a>
+  <a href="https://dash.plotly.com/"><img src="https://img.shields.io/badge/Dash-Plotly-3F4F75?style=for-the-badge&logo=plotly&logoColor=white" alt="Dash by Plotly" /></a>
   <a href="https://streamlit.io/"><img src="https://img.shields.io/badge/Streamlit-1.60-ff4b4b?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit 1.60" /></a>
   <a href="https://scikit-learn.org/"><img src="https://img.shields.io/badge/scikit--learn-1.3+-f59e0b?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="Scikit-Learn 1.3+" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge" alt="MIT License" /></a>
 </p>
 
 <p align="center">
-  <a href="#-interactive-bems-dashboard-tour"><strong>🖥️ Explore the Interactive BEMS Dashboard Tour (All 8 Views) »</strong></a>
+  <a href="#dashboard-tour"><strong>🖥️ Explore the Interactive BEMS Dashboard Tour (All 8 Views) »</strong></a>
 </p>
 
 <p align="center">
-  <a href="#-description">Description</a> •
-  <a href="#-interactive-bems-dashboard-tour">Dashboard UI Tour</a> •
-  <a href="#-technologies-used">Tech Stack</a> •
-  <a href="#-special-gotchas--engineering-lessons">Gotchas & Insights</a> •
-  <a href="#-technical-details--getting-started">Getting Started</a> •
-  <a href="#-contributing">Contributing</a>
+  <a href="#description">Description</a> •
+  <a href="#dashboard-tour">Dashboard UI Tour</a> •
+  <a href="#technologies">Tech Stack</a> •
+  <a href="#gotchas">Gotchas & Insights</a> •
+  <a href="#getting-started">Getting Started</a> •
+  <a href="#contributing">Contributing</a>
 </p>
 
 ---
 
+<a id="description"></a>
 ## 📖 Description
 
 Commercial buildings consume approximately **40% of global primary energy**, with HVAC (Heating, Ventilation, and Air Conditioning) accounting for over half of this total. Most commercial facilities still operate under rigid, schedule-based automation timers that condition unoccupied zones and run supply fans at full throttle regardless of actual real-time occupancy.
 
 **AI-Based Energy Optimization for Smart Buildings** is a production-grade research platform functioning as an intelligent Building Energy Management System (BEMS). Rather than treating energy forecasting as a passive academic exercise, this project implements a complete, closed-loop predictive optimization pipeline:
 
-```
+```text
 Current Building State at time t (Sensors, Weather, HVAC, Lags)
                          │
                          ▼
@@ -68,15 +69,16 @@ All delta energy values and recommended setpoints are **model-based counterfactu
 
 ---
 
+<a id="dashboard-tour"></a>
 ## 🎬 Interactive BEMS Dashboard Tour
 
-The production Streamlit platform provides building operators and researchers with real-time telemetry, model interpretability, and counterfactual simulation across **8 dedicated analytical views**:
+The platform provides building operators and researchers with real-time telemetry, model interpretability, and counterfactual simulation across **8 dedicated analytical views**. The interface is available via our custom **Dash (by Plotly)** industrial web application (`python dashboard/dash_app.py`) with bespoke dark glassmorphism styling, as well as the alternative **Streamlit** dashboard (`streamlit run dashboard/app.py`):
 
 <p align="center">
   <img src="docs/figures/dashboard/01_executive_overview.png" alt="Executive Overview & KPI Telemetry" width="100%" />
 </p>
 <p align="center">
-  <em>Figure 1: Flagship Executive Overview displaying live BEMS KPI cards, cumulative energy savings counter ($5,120.45\text{ kWh}$ / $53.32\%$), and 10-day operational preview.</em>
+  <em>Figure 1: Flagship Executive Overview displaying live BEMS KPI cards, cumulative energy savings counter ($5,120.45\text{ kWh}$ / $53.32\%$), and 10-day operational trajectory preview.</em>
 </p>
 
 ---
@@ -87,12 +89,12 @@ The production Streamlit platform provides building operators and researchers wi
   <tr>
     <td width="50%" align="center">
       <img src="docs/figures/dashboard/01_executive_overview.png" alt="Executive Overview" width="100%" /><br>
-      <strong>View 1: Executive Overview & KPI Telemetry</strong><br>
+      <strong>View 1: Executive Overview & KPI Telemetry (<code>/</code>)</strong><br>
       <em>High-level BEMS overview: 994h test metrics, avoided expenses ($\$1,126.50$), avoided carbon ($1,075.3\text{ kg CO}_2$), and 10-day telemetry timeline.</em>
     </td>
     <td width="50%" align="center">
       <img src="docs/figures/dashboard/02_scenario_optimizer.png" alt="Scenario Simulator" width="100%" /><br>
-      <strong>View 2: Interactive Scenario Simulator</strong><br>
+      <strong>View 2: Interactive Scenario Simulator (<code>/scenario-simulator</code>)</strong><br>
       <em>Single-hour counterfactual optimizer: live setpoint sliders, candidate grid evaluation, safety gate overrides, and diagnostic attribution.</em>
     </td>
   </tr>
@@ -104,12 +106,12 @@ The production Streamlit platform provides building operators and researchers wi
   <tr>
     <td width="50%" align="center">
       <img src="docs/figures/dashboard/03_energy_analytics.png" alt="Energy Analytics" width="100%" /><br>
-      <strong>View 3: Tripartite Energy Analytics</strong><br>
+      <strong>View 3: Tripartite Energy Analytics (<code>/energy-analytics</code>)</strong><br>
       <em>Comparative consumption timelines (Actual vs Baseline Display vs Counterfactual Optimized), 24h diurnal profiles, and submeter decomposition.</em>
     </td>
     <td width="50%" align="center">
       <img src="docs/figures/dashboard/04_occupancy_analytics.png" alt="Occupancy Analytics" width="100%" /><br>
-      <strong>View 4: Occupancy Telemetry & Safety Gates</strong><br>
+      <strong>View 4: Occupancy Telemetry & Safety Gates (<code>/occupancy-analytics</code>)</strong><br>
       <em>Random Forest occupancy probability curves, dual-threshold guardrails ($T_{\text{class}}=0.51$, $T_{\text{safety}}=0.30$), and diurnal occupancy heatmaps.</em>
     </td>
   </tr>
@@ -121,12 +123,12 @@ The production Streamlit platform provides building operators and researchers wi
   <tr>
     <td width="50%" align="center">
       <img src="docs/figures/dashboard/05_model_performance.png" alt="Model Benchmarking" width="100%" /><br>
-      <strong>View 5: Model Benchmark Registry</strong><br>
+      <strong>View 5: Model Benchmark Registry (<code>/model-performance</code>)</strong><br>
       <em>10-model comparative registry (Random Forest, LightGBM, XGBoost, Ridge, Naive Persistence), residual error analysis, and ROC/PR curves.</em>
     </td>
     <td width="50%" align="center">
       <img src="docs/figures/dashboard/06_optimization_analysis.png" alt="Optimization Analysis" width="100%" /><br>
-      <strong>View 6: Multi-Policy Ablation Studies</strong><br>
+      <strong>View 6: Multi-Policy Ablation Studies (<code>/optimization-analysis</code>)</strong><br>
       <em>Empirical safeguard comparison proving how mechanical ramp limits prevent non-physical 115% swings while preserving 53.32% realistic savings.</em>
     </td>
   </tr>
@@ -138,12 +140,12 @@ The production Streamlit platform provides building operators and researchers wi
   <tr>
     <td width="50%" align="center">
       <img src="docs/figures/dashboard/07_safety_validity.png" alt="Physical Validity" width="100%" /><br>
-      <strong>View 7: Safety & Validity Verification</strong><br>
+      <strong>View 7: Safety & Validity Verification (<code>/safety-validity</code>)</strong><br>
       <em>Deterministic safeguard audit: 0% mechanical ramp-rate violations ($\le 15\%/\text{h}$ fan, $\le 30\%/\text{h}$ damper) and baseload energy floor protection.</em>
     </td>
     <td width="50%" align="center">
       <img src="docs/figures/dashboard/08_methodology_pipeline.png" alt="Methodology Pipeline" width="100%" /><br>
-      <strong>View 8: Methodology & System Architecture</strong><br>
+      <strong>View 8: Methodology & System Architecture (<code>/about-methodology</code>)</strong><br>
       <em>End-to-end BEMS pipeline schematic illustrating zero-leakage preprocessing, lag feature engineering ($t \to t+1$), and dual ML surrogate inference.</em>
     </td>
   </tr>
@@ -151,6 +153,7 @@ The production Streamlit platform provides building operators and researchers wi
 
 ---
 
+<a id="technologies"></a>
 ## 💻 Technologies Used
 
 <table align="center">
@@ -161,38 +164,44 @@ The production Streamlit platform provides building operators and researchers wi
   </tr>
   <tr>
     <td align="center"><strong>Core Language</strong></td>
-    <td>Python 3.11</td>
+    <td>Python 3.11+</td>
     <td>Vectorized computation, time-series transformations, pipeline execution.</td>
   </tr>
   <tr>
-    <td align="center"><strong>Interactive UI</strong></td>
+    <td align="center"><strong>Custom Reactive UI</strong></td>
+    <td>Dash 2.14+ (by Plotly) & Dash Bootstrap Components</td>
+    <td>Industrial BEMS operations dashboard with bespoke dark glassmorphism design system (<code>dashboard/assets/custom.css</code>), reactive callbacks, and URL routing.</td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Alternative UI</strong></td>
     <td>Streamlit 1.60.0</td>
-    <td>Production multi-page BEMS platform, responsive controls, reactive caching.</td>
+    <td>Multi-page BEMS research application with cached model inference.</td>
   </tr>
   <tr>
     <td align="center"><strong>Data Visualization</strong></td>
     <td>Plotly 7.0 & Matplotlib 3.10</td>
-    <td>Interactive telemetry charts, 2D heatmaps, parity plots, submeter donuts.</td>
+    <td>Interactive WebGL telemetry charts, parity scatters, 2D weekly heatmaps, delta bars, cumulative areas, and submeter donuts.</td>
   </tr>
   <tr>
     <td align="center"><strong>Machine Learning</strong></td>
     <td>scikit-learn, LightGBM, XGBoost</td>
-    <td>Random Forest classifier, Ridge energy surrogate, gradient boosting benchmarks.</td>
+    <td>Random Forest classifier, Ridge energy surrogate ($\alpha=10$), gradient boosting comparative benchmarks.</td>
   </tr>
   <tr>
     <td align="center"><strong>Data Pipeline</strong></td>
-    <td>Pandas 2.2, NumPy, Apache Arrow</td>
-    <td>Uniform hourly resampling, zero-leakage backward lags, parquet storage.</td>
+    <td>Pandas 2.2+, NumPy, Apache Arrow (PyArrow)</td>
+    <td>Uniform hourly resampling, zero-leakage backward rolling lags, parquet storage.</td>
   </tr>
   <tr>
     <td align="center"><strong>Testing & Quality</strong></td>
-    <td>PyTest, AnyIO</td>
-    <td>41 automated unit and integration tests covering math, schema, and safety.</td>
+    <td>PyTest 9.1+, AnyIO</td>
+    <td>67 automated unit and integration tests covering math, schema, physical bounds, Streamlit dashboard, and custom Dash reactive platform with 100% pass rate.</td>
   </tr>
 </table>
 
 ---
 
+<a id="gotchas"></a>
 ## ⚡ Special Gotchas & Engineering Lessons
 
 Real-world building datasets are messy, non-stationary, and governed by thermodynamic constraints that standard machine learning pipelines fail to respect. Here are the core problems encountered and the engineering solutions implemented:
@@ -225,6 +234,7 @@ Real-world building datasets are messy, non-stationary, and governed by thermody
 
 ---
 
+<a id="getting-started"></a>
 ## 🛠️ Technical Details & Getting Started
 
 ### Prerequisites
@@ -260,22 +270,33 @@ Real-world building datasets are messy, non-stationary, and governed by thermody
    ```bash
    pytest -v
    ```
-   *Expected Output: `41 passed in ~5s` covering preprocessing, modeling, robustness, optimization, and dashboard.*
+   *Expected Output: `67 passed in ~7s` covering preprocessing, modeling, robustness, optimization, Streamlit dashboard, and custom Dash reactive platform.*
 
 ### Running the Interactive BEMS Dashboard
 
-Launch the Streamlit research platform locally:
+#### Option 1: Custom Reactive Dash (by Plotly) Dashboard (Recommended)
+Launch the custom industrial Dash BEMS application with bespoke dark glassmorphism styling and reactive callbacks:
+```bash
+python dashboard/dash_app.py
+```
+Open your browser to: **`http://localhost:8050`**
+
+#### Option 2: Streamlit Dashboard
+Launch the alternative Streamlit dashboard:
 ```bash
 streamlit run dashboard/app.py
 ```
-The browser will automatically open to `http://localhost:8501`.
+Open your browser to: **`http://localhost:8501`**
 
 ### Repository Structure
 
 ```text
 ai-based-energy-optimization-for-smart-building/
 ├── dashboard/
-│   ├── app.py                      # Main Streamlit 8-page application
+│   ├── dash_app.py                 # Custom reactive Dash (by Plotly) dashboard application
+│   ├── assets/
+│   │   └── custom.css              # Bespoke dark glassmorphic design system & typography
+│   ├── app.py                      # Alternative Streamlit 8-page application
 │   ├── utils.py                    # Cached data loaders & scenario optimizer
 │   └── generate_figures.py         # Static documentation figure generator
 ├── data/
@@ -306,13 +327,15 @@ ai-based-energy-optimization-for-smart-building/
 │   ├── test_modeling.py            # Serialized model reload & shape tests
 │   ├── test_robustness.py          # Baseline comparison & bound tests
 │   ├── test_optimization.py        # Safety gate, bounds & ramp limit tests
-│   └── test_dashboard.py           # Dashboard imports, schemas & scenario tests
+│   ├── test_dashboard.py           # Streamlit dashboard imports, schemas & scenario tests
+│   └── test_dash_dashboard.py      # Dash app routes, layouts & reactive callback tests
 ├── requirements.txt                # Pinned production dependencies
 └── README.md
 ```
 
 ---
 
+<a id="contributing"></a>
 ## 🤝 Contributing
 
 Contributions, feedback, and academic collaborations are welcome! Please follow these steps:

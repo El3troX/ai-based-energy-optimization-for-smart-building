@@ -3,12 +3,32 @@ BEMS Dashboard Utility Module (Phase 5).
 Provides cached data loading, model artifact retrieval, single-hour scenario optimization,
 and analytics helper functions for the Streamlit interactive dashboard.
 """
+import functools
 import json
 from pathlib import Path
 from typing import Dict, Any, Tuple, Optional, List
 import numpy as np
 import pandas as pd
-import streamlit as st
+
+def _cache_data(func):
+    """Caches function results using Streamlit cache if running in Streamlit, else lru_cache."""
+    try:
+        import streamlit as st
+        if hasattr(st, "runtime") and st.runtime.exists():
+            return st.cache_data(show_spinner=False)(func)
+    except Exception:
+        pass
+    return functools.lru_cache(maxsize=32)(func)
+
+def _cache_resource(func):
+    """Caches resources using Streamlit cache if running in Streamlit, else lru_cache."""
+    try:
+        import streamlit as st
+        if hasattr(st, "runtime") and st.runtime.exists():
+            return st.cache_resource(show_spinner=False)(func)
+    except Exception:
+        pass
+    return functools.lru_cache(maxsize=8)(func)
 
 from src.config import (
     ELECTRICITY_TARIFF,
@@ -30,7 +50,7 @@ from src.optimizer import (
 )
 
 
-@st.cache_data(show_spinner=False)
+@_cache_data
 def load_simulation_results(
     file_path: str = "data/processed/phase4_simulation_results.parquet"
 ) -> pd.DataFrame:
@@ -46,7 +66,7 @@ def load_simulation_results(
     return df
 
 
-@st.cache_data(show_spinner=False)
+@_cache_data
 def load_joint_test_data(
     file_path: str = "data/processed/joint_modeling_data.parquet"
 ) -> pd.DataFrame:
@@ -67,7 +87,7 @@ def load_joint_test_data(
     return df.loc[test_mask].copy()
 
 
-@st.cache_resource(show_spinner=False)
+@_cache_resource
 def get_cached_models(
     occ_dir: str = "models/occupancy",
     energy_dir: str = "models/energy"
@@ -78,7 +98,7 @@ def get_cached_models(
     return load_optimization_models(occ_dir, energy_dir)
 
 
-@st.cache_data(show_spinner=False)
+@_cache_data
 def load_benchmark_metrics() -> Dict[str, Any]:
     """
     Loads precomputed Phase 3 benchmark metrics from docs/phase3_results.json.
@@ -90,7 +110,7 @@ def load_benchmark_metrics() -> Dict[str, Any]:
         return json.load(f)
 
 
-@st.cache_data(show_spinner=False)
+@_cache_data
 def load_robustness_metrics() -> Dict[str, Any]:
     """
     Loads precomputed Phase 3.5 robustness metrics from docs/phase3_robustness_results.json.
@@ -102,7 +122,7 @@ def load_robustness_metrics() -> Dict[str, Any]:
         return json.load(f)
 
 
-@st.cache_data(show_spinner=False)
+@_cache_data
 def load_phase4_summary() -> Dict[str, Any]:
     """
     Loads precomputed Phase 4 simulation summary from docs/phase4_results.json.
