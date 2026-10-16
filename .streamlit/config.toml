@@ -1,0 +1,48 @@
+# Building 59 BEMS — Professional Dark Theme
+
+[theme]
+base = "dark"
+primaryColor = "#38BDF8"
+backgroundColor = "#0B1120"
+secondaryBackgroundColor = "#111827"
+codeBackgroundColor = "#111827"
+textColor = "#F1F5F9"
+linkColor = "#38BDF8"
+borderColor = "#1F2E44"
+codeTextColor = "#CBD5E1"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "8px"
+buttonRadius = "8px"
+
+font = "'Inter':https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+headingFont = "'Inter':https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+baseFontSize = 14
+baseFontWeight = 400
+codeFontSize = "13px"
+headingFontSizes = ["30px", "22px", "18px", "16px", "14px", "12px"]
+headingFontWeights = [700, 600, 600, 600, 500, 500]
+linkUnderline = false
+
+greenColor = "#10B981"
+redColor = "#EF4444"
+yellowColor = "#F59E0B"
+orangeColor = "#FB923C"
+blueColor = "#38BDF8"
+violetColor = "#818CF8"
+grayColor = "#94A3B8"
+
+chartCategoricalColors = ["#38BDF8", "#10B981", "#F59E0B", "#818CF8", "#F87171", "#34D399", "#FBBF24", "#A78BFA"]
+chartSequentialColors = ["#0C2340", "#0A3357", "#08466E", "#065B87", "#0472A2", "#028BB8", "#00A6CE", "#38BDF8", "#7DD3FC", "#BAE6FD"]
+
+dataframeBorderColor = "#1F2E44"
+dataframeHeaderBackgroundColor = "#111827"
+
+[theme.sidebar]
+backgroundColor = "#070D1A"
+secondaryBackgroundColor = "#0F1B2E"
+codeBackgroundColor = "#111827"
+textColor = "#F1F5F9"
+borderColor = "#1F2E44"
+primaryColor = "#38BDF8"

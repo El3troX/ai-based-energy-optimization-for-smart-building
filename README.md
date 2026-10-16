@@ -19,12 +19,12 @@
 </p>
 
 <p align="center">
-  <a href="[LIVE_DEMO_URL]"><strong>🔗 Explore the Interactive Live Streamlit Demo »</strong></a>
+  <a href="#-interactive-bems-dashboard-tour"><strong>🖥️ Explore the Interactive BEMS Dashboard Tour (All 8 Views) »</strong></a>
 </p>
 
 <p align="center">
   <a href="#-description">Description</a> •
-  <a href="#-live-demo--ui-walkthrough">Demo & UI</a> •
+  <a href="#-interactive-bems-dashboard-tour">Dashboard UI Tour</a> •
   <a href="#-technologies-used">Tech Stack</a> •
   <a href="#-special-gotchas--engineering-lessons">Gotchas & Insights</a> •
   <a href="#-technical-details--getting-started">Getting Started</a> •
@@ -68,44 +68,86 @@ All delta energy values and recommended setpoints are **model-based counterfactu
 
 ---
 
-## 🎬 Live Demo & UI Walkthrough
+## 🎬 Interactive BEMS Dashboard Tour
+
+The production Streamlit platform provides building operators and researchers with real-time telemetry, model interpretability, and counterfactual simulation across **8 dedicated analytical views**:
 
 <p align="center">
-  <a href="[LIVE_DEMO_URL]">
-    <img src="[DEMO_WALKTHROUGH_GIF]" alt="Interactive BEMS Dashboard Walkthrough" width="90%" />
-  </a>
-  <br>
-  <em>(Click above to view the animated walkthrough GIF or open the live interactive Streamlit application)</em>
-</p>
-
-The interactive BEMS application is organized into **8 dedicated analytical views**:
-
-### 1. Executive Overview & Scenario Simulator
-<p align="center">
-  <img src="docs/figures/dashboard/01_executive_overview.png" alt="Executive Overview" width="48%" />
-  <img src="docs/figures/dashboard/02_scenario_optimizer.png" alt="Scenario Simulator" width="48%" />
+  <img src="docs/figures/dashboard/01_executive_overview.png" alt="Executive Overview & KPI Telemetry" width="100%" />
 </p>
 <p align="center">
-  <em>Left: Real-time BEMS KPI telemetry and 10-day trajectory preview. Right: Interactive historical scenario optimizer with what-if setpoint overrides and diagnostic attribution.</em>
+  <em>Figure 1: Flagship Executive Overview displaying live BEMS KPI cards, cumulative energy savings counter ($5,120.45\text{ kWh}$ / $53.32\%$), and 10-day operational preview.</em>
 </p>
+
+---
+
+### 1. Executive Overview & Interactive Scenario Simulator
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/figures/dashboard/01_executive_overview.png" alt="Executive Overview" width="100%" /><br>
+      <strong>View 1: Executive Overview & KPI Telemetry</strong><br>
+      <em>High-level BEMS overview: 994h test metrics, avoided expenses ($\$1,126.50$), avoided carbon ($1,075.3\text{ kg CO}_2$), and 10-day telemetry timeline.</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/figures/dashboard/02_scenario_optimizer.png" alt="Scenario Simulator" width="100%" /><br>
+      <strong>View 2: Interactive Scenario Simulator</strong><br>
+      <em>Single-hour counterfactual optimizer: live setpoint sliders, candidate grid evaluation, safety gate overrides, and diagnostic attribution.</em>
+    </td>
+  </tr>
+</table>
 
 ### 2. Tripartite Energy Analytics & Occupancy Telemetry
-<p align="center">
-  <img src="docs/figures/dashboard/03_energy_analytics.png" alt="Energy Analytics" width="48%" />
-  <img src="docs/figures/dashboard/04_occupancy_analytics.png" alt="Occupancy Analytics" width="48%" />
-</p>
-<p align="center">
-  <em>Left: Actual vs Baseline Display vs Counterfactual Optimized consumption across submeters. Right: Occupancy probability trajectory with dual decision ($T=0.51$) and safety ($T=0.30$) thresholds.</em>
-</p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/figures/dashboard/03_energy_analytics.png" alt="Energy Analytics" width="100%" /><br>
+      <strong>View 3: Tripartite Energy Analytics</strong><br>
+      <em>Comparative consumption timelines (Actual vs Baseline Display vs Counterfactual Optimized), 24h diurnal profiles, and submeter decomposition.</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/figures/dashboard/04_occupancy_analytics.png" alt="Occupancy Analytics" width="100%" /><br>
+      <strong>View 4: Occupancy Telemetry & Safety Gates</strong><br>
+      <em>Random Forest occupancy probability curves, dual-threshold guardrails ($T_{\text{class}}=0.51$, $T_{\text{safety}}=0.30$), and diurnal occupancy heatmaps.</em>
+    </td>
+  </tr>
+</table>
 
 ### 3. Model Benchmark Registry & Optimization Ablation Studies
-<p align="center">
-  <img src="docs/figures/dashboard/05_model_performance.png" alt="Model Benchmarking" width="48%" />
-  <img src="docs/figures/dashboard/06_optimization_analysis.png" alt="Optimization Analysis" width="48%" />
-</p>
-<p align="center">
-  <em>Left: 10-model benchmark registry across validation and test splits. Right: Safeguard ablation study visually proving the physical impossibility of unconstrained ramp rates.</em>
-</p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/figures/dashboard/05_model_performance.png" alt="Model Benchmarking" width="100%" /><br>
+      <strong>View 5: Model Benchmark Registry</strong><br>
+      <em>10-model comparative registry (Random Forest, LightGBM, XGBoost, Ridge, Naive Persistence), residual error analysis, and ROC/PR curves.</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/figures/dashboard/06_optimization_analysis.png" alt="Optimization Analysis" width="100%" /><br>
+      <strong>View 6: Multi-Policy Ablation Studies</strong><br>
+      <em>Empirical safeguard comparison proving how mechanical ramp limits prevent non-physical 115% swings while preserving 53.32% realistic savings.</em>
+    </td>
+  </tr>
+</table>
+
+### 4. Physical Validity & End-to-End Pipeline Architecture
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/figures/dashboard/07_safety_validity.png" alt="Physical Validity" width="100%" /><br>
+      <strong>View 7: Safety & Validity Verification</strong><br>
+      <em>Deterministic safeguard audit: 0% mechanical ramp-rate violations ($\le 15\%/\text{h}$ fan, $\le 30\%/\text{h}$ damper) and baseload energy floor protection.</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/figures/dashboard/08_methodology_pipeline.png" alt="Methodology Pipeline" width="100%" /><br>
+      <strong>View 8: Methodology & System Architecture</strong><br>
+      <em>End-to-end BEMS pipeline schematic illustrating zero-leakage preprocessing, lag feature engineering ($t \to t+1$), and dual ML surrogate inference.</em>
+    </td>
+  </tr>
+</table>
 
 ---
 
